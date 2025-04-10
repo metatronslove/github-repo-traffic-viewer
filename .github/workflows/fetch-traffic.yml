@@ -2,42 +2,68 @@ name: GitHub Traffic Data Collector
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Runs hourly
+    - cron: '0 * * * *'  # Her saat başı çalışır
   workflow_dispatch:
 
 jobs:
-  collect-traffic-data:
+  fetch-traffic:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Only need write for commits
-      pull-requests: read
+      contents: write
+      pull-requests: write
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Fetch traffic data
+      - name: Set up environment
         run: |
-          mkdir -p docs/data
-          
-          # Get views data
-          curl -H "Accept: application/vnd.github+json" \
-               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-               https://api.github.com/repos/${{ github.repository }}/traffic/views > docs/data/views.json
-          
-          # Get clones data
-          curl -H "Accept: application/vnd.github+json" \
-               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-               https://api.github.com/repos/${{ github.repository }}/traffic/clones > docs/data/clones.json
-          
-          # Get basic repo info
+          mkdir -p docs/data/repos
+          echo "REPOS_DATA_DIR=docs/data/repos" >> $GITHUB_ENV
+
+      - name: Get all repositories
+        id: get-repos
+        run: |
+          repos=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                 https://api.github.com/user/repos | jq -r '.[].name')
+          echo "repos=${repos}" >> $GITHUB_OUTPUT
+          echo "Found repositories: ${repos}"
+
+      - name: Fetch traffic data for each repo
+        run: |
+          for repo in ${{ steps.get-repos.outputs.repos }}; do
+            echo "Processing repository: $repo"
+            
+            # Create directory for repo
+            mkdir -p "$REPOS_DATA_DIR/$repo"
+            
+            # Get views data
+            curl -s -H "Accept: application/vnd.github+json" \
+                 -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                 https://api.github.com/repos/${{ github.repository_owner }}/$repo/traffic/views \
+                 > "$REPOS_DATA_DIR/$repo/views.json"
+            
+            # Get clones data
+            curl -s -H "Accept: application/vnd.github+json" \
+                 -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                 https://api.github.com/repos/${{ github.repository_owner }}/$repo/traffic/clones \
+                 > "$REPOS_DATA_DIR/$repo/clones.json"
+            
+            # Small delay to avoid rate limiting
+            sleep 1
+          done
+
+      - name: Save repository list
+        run: |
           curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-               https://api.github.com/repos/${{ github.repository }} > docs/data/repo-info.json
+               https://api.github.com/user/repos \
+               | jq '[.[] | {name: .name, full_name: .full_name}]' \
+               > docs/data/repo-info.json
 
-      - name: Commit collected data
+      - name: Commit and push changes
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add docs/data/
-          git commit -m "📈 Traffic data update [$(date +'%Y-%m-%d %H:%M')]" || echo "No changes to commit"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add docs/data/*
+          git commit -m "🔄 Traffic data updated for all repos" || echo "No changes to commit"
           git push
