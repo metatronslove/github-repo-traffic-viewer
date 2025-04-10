@@ -9,6 +9,9 @@ jobs:
   fetch-traffic-data:
     runs-on: ubuntu-latest
     permissions:
+      actions: read
+      checks: write
+      deployments: write
       contents: write
       pull-requests: write
 
@@ -31,7 +34,7 @@ jobs:
           while true; do
             echo "Fetching page $page"
             response=$(curl -s \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Authorization: Bearer ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/user/repos?per_page=100&page=$page")
             
@@ -65,7 +68,7 @@ jobs:
             # Görüntüleme verileri
             echo "Fetching views for $repo"
             curl -s \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Authorization: Bearer ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/${{ github.repository_owner }}/$repo/traffic/views" \
               > "$REPOS_DIR/$repo/views.json"
@@ -73,7 +76,7 @@ jobs:
             # Klonlama verileri
             echo "Fetching clones for $repo"
             curl -s \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Authorization: Bearer ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/${{ github.repository_owner }}/$repo/traffic/clones" \
               > "$REPOS_DIR/$repo/clones.json"
@@ -85,7 +88,7 @@ jobs:
         run: |
           # Tüm repoların temel bilgilerini kaydet
           curl -s \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/user/repos?per_page=100" \
             | jq '[.[] | {name: .name, full_name: .full_name, private: .private, updated_at: .updated_at}]' \
