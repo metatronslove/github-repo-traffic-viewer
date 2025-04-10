@@ -11,13 +11,17 @@ permissions:
 jobs:
   fetch-traffic-data:
     runs-on: ubuntu-latest
+    concurrency: 
+      group: traffic-data-${{ github.ref }}
+      cancel-in-progress: true
     
     steps:
-      - name: Checkout repository
+      - name: Checkout with cleanup
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0
+          clean: true
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -26,12 +30,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install pygithub==1.59.0
-          python -m pip install pyyaml
+          python -m pip install pygithub==1.59.0 pyyaml
 
-      - name: Clean and setup
+      - name: Prepare data directory
         run: |
-          # Sadece eski trafik verilerini sil, repo-info.json koru
+          # Sadece eski trafik verilerini sil
           find docs/data/repos/ -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} +
           mkdir -p docs/data/repos
           echo "DATA_DIR=docs/data" >> $GITHUB_ENV
@@ -45,112 +48,96 @@ jobs:
           import os
           import json
           import time
+          from datetime import datetime
 
           g = Github(os.environ['GH_TOKEN'])
           data_dir = os.environ['DATA_DIR']
           
+          # Mevcut repo-info.json yoksa oluştur
+          repo_info_path = f"{data_dir}/repo-info.json"
+          repo_data = []
+          
           try:
-              # Mevcut repo-info.json'ı yükle veya oluştur
-              repo_info_path = f"{data_dir}/repo-info.json"
-              if os.path.exists(repo_info_path):
-                  with open(repo_info_path, 'r') as f:
-                      existing_data = json.load(f)
-              else:
-                  existing_data = []
-              
-              existing_repos = {repo['name']: repo for repo in existing_data}
-              updated_repos = []
-              
               for repo in g.get_user().get_repos(type='all'):
                   try:
                       repo_dir = f"{data_dir}/repos/{repo.name}"
                       os.makedirs(repo_dir, exist_ok=True)
                       
                       # Trafik verilerini topla
-                      views_data = {"views": [], "count": 0, "uniques": 0}
-                      clones_data = {"clones": [], "count": 0, "uniques": 0}
+                      traffic_data = {
+                          "views": {"views": [], "count": 0, "uniques": 0},
+                          "clones": {"clones": [], "count": 0, "uniques": 0}
+                      }
                       
-                      # Views verisi
                       try:
-                          traffic = repo.get_views_traffic()
-                          views_data = {
+                          views = repo.get_views_traffic()
+                          traffic_data["views"] = {
                               "views": [{
                                   "timestamp": v.timestamp.isoformat(),
                                   "count": v.count,
                                   "uniques": v.uniques
-                              } for v in traffic["views"]],
-                              "count": traffic["count"],
-                              "uniques": traffic["uniques"]
+                              } for v in views["views"]],
+                              "count": views["count"],
+                              "uniques": views["uniques"]
                           }
                           with open(f"{repo_dir}/views.json", "w") as f:
-                              json.dump(views_data, f, indent=2)
+                              json.dump(traffic_data["views"], f)
                       except Exception as e:
                           print(f"⚠️ Views error for {repo.name}: {str(e)}")
                       
-                      # Clones verisi
                       try:
-                          traffic = repo.get_clones_traffic()
-                          clones_data = {
+                          clones = repo.get_clones_traffic()
+                          traffic_data["clones"] = {
                               "clones": [{
                                   "timestamp": c.timestamp.isoformat(),
                                   "count": c.count,
                                   "uniques": c.uniques
-                              } for c in traffic["clones"]],
-                              "count": traffic["count"],
-                              "uniques": traffic["uniques"]
+                              } for c in clones["clones"]],
+                              "count": clones["count"],
+                              "uniques": clones["uniques"]
                           }
                           with open(f"{repo_dir}/clones.json", "w") as f:
-                              json.dump(clones_data, f, indent=2)
+                              json.dump(traffic_data["clones"], f)
                       except Exception as e:
                           print(f"⚠️ Clones error for {repo.name}: {str(e)}")
                       
-                      # Repo bilgisini güncelle veya oluştur
-                      repo_info = existing_repos.get(repo.name, {
+                      # Repo bilgilerini güncelle
+                      repo_data.append({
                           "name": repo.name,
                           "full_name": repo.full_name,
                           "private": repo.private,
-                          "updated_at": repo.updated_at.isoformat()
+                          "updated_at": datetime.now().isoformat(),
+                          "has_views": len(traffic_data["views"]["views"]) > 0,
+                          "has_clones": len(traffic_data["clones"]["clones"]) > 0
                       })
-                      repo_info.update({
-                          "last_updated": time.strftime('%Y-%m-%dT%H:%M:%SZ'),
-                          "has_views": len(views_data["views"]) > 0,
-                          "has_clones": len(clones_data["clones"]) > 0
-                      })
-                      updated_repos.append(repo_info)
                       
-                      time.sleep(1)
+                      time.sleep(1.5)  # Rate limit koruması
                       
                   except Exception as e:
                       print(f"❌ Error processing {repo.name}: {str(e)}")
               
-              # Güncellenmiş veriyi yaz
-              with open(repo_info_path, 'w') as f:
-                  json.dump(sorted(updated_repos, key=lambda x: x['name']), f, indent=2)
+              # Repo bilgilerini yaz
+              with open(repo_info_path, "w") as f:
+                  json.dump(repo_data, f, indent=2)
               
-              print(f"✅ Successfully processed {len(updated_repos)} repositories")
+              print(f"✅ Processed {len(repo_data)} repositories")
               
           except Exception as e:
               print(f"🔥 Critical error: {str(e)}")
               raise
           EOF
 
-      - name: Commit and push changes
+      - name: Force push changes
         run: |
-          # Git ayarları
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
-          # Değişiklikleri ekle
-          git add docs/data/
+          # Tüm değişiklikleri ekle
+          git add -f docs/data/
           
-          # Commit mesajı
-          commit_msg="📊 Updated traffic data $(date '+%Y-%m-%d %H:%M')"
+          # Commit oluştur
+          git commit -m "📊 Updated traffic data [skip ci]" || echo "No changes to commit"
           
-          # Atomic commit ve push
-          if git diff-index --quiet HEAD -- docs/data/repos; then
-            echo "No changes in traffic data to commit"
-          else
-            git commit -m "$commit_msg"
-            git pull --rebase origin main
-            git push origin main
-          fi
+          # Force push yap (çakışmaları önlemek için)
+          git pull origin main --rebase --allow-unrelated-histories || true
+          git push origin main --force-with-lease
