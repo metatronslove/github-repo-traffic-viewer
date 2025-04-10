@@ -434,9 +434,15 @@
 			}
     
 			// Sayfalandırma ve görselleştirme
-			reposPerPage = parseInt(document.getElementById('per-page').value);
-			setupPagination(allRepos.length);
-			displayRepos();
+			let currentPage = 1;
+			let reposPerPage = 25;
+
+			// Per-page değişikliklerini dinle
+			document.getElementById('per-page').addEventListener('change', (e) => {
+				reposPerPage = parseInt(e.target.value) || 25;
+				currentPage = 1; // Sayfayı sıfırla
+				displayRepos();
+			});
 		}
 			
 		// Sayfa yüklendiğinde dil butonlarını aktif hale getir
