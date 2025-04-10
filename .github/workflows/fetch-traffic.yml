@@ -5,13 +5,21 @@ on:
     - cron: '0 * * * *'  # Runs hourly
   workflow_dispatch:
 
+permissions:
+  contents: write
+  metadata: read
+  pull-requests: read
+
 jobs:
   fetch-traffic-data:
     runs-on: ubuntu-latest
+    environment: traffic-collection
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -30,77 +38,85 @@ jobs:
 
       - name: Collect traffic data
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           python - <<EOF
           from github import Github
           import os
           import json
           from datetime import datetime
+          import time
 
-          g = Github(os.environ['GITHUB_TOKEN'])
+          # Use PAT instead of GITHUB_TOKEN
+          g = Github(os.environ['GH_TOKEN'])
           data_dir = os.environ['DATA_DIR']
           
-          # Get all repositories (only those accessible with current token)
-          repos = list(g.get_user().get_repos())
-          
-          # Prepare repository index for the HTML page
-          repo_index = []
-          
-          for repo in repos:
-              try:
-                  repo_dir = f"{data_dir}/{repo.name}"
-                  os.makedirs(repo_dir, exist_ok=True)
-                  
-                  # Save basic repo info for the index
-                  repo_index.append({
-                      "name": repo.name,
-                      "full_name": repo.full_name,
-                      "private": repo.private,
-                      "updated_at": repo.updated_at.isoformat()
-                  })
-                  
-                  # Get and save traffic data
+          try:
+              # Get all accessible repositories
+              repos = []
+              for repo in g.get_user().get_repos(type='all'):
+                  repos.append(repo)
+                  time.sleep(0.5)  # Rate limit protection
+              
+              repo_index = []
+              
+              for repo in repos:
                   try:
-                      views = repo.get_views_traffic()
-                      clones = repo.get_clones_traffic()
+                      repo_dir = f"{data_dir}/{repo.name}"
+                      os.makedirs(repo_dir, exist_ok=True)
                       
-                      with open(f"{repo_dir}/views.json", "w") as f:
-                          json.dump({
-                              "views": [{
-                                  "timestamp": v.timestamp.isoformat(),
-                                  "count": v.count,
-                                  "uniques": v.uniques
-                              } for v in views['views']],
-                              "count": views['count'],
-                              "uniques": views['uniques']
-                          }, f)
+                      # Save repo metadata for the dashboard
+                      repo_index.append({
+                          "name": repo.name,
+                          "full_name": repo.full_name,
+                          "private": repo.private,
+                          "updated_at": repo.updated_at.isoformat()
+                      })
                       
-                      with open(f"{repo_dir}/clones.json", "w") as f:
-                          json.dump({
-                              "clones": [{
-                                  "timestamp": c.timestamp.isoformat(),
-                                  "count": c.count,
-                                  "uniques": c.uniques
-                              } for c in clones['clones']],
-                              "count": clones['count'],
-                              "uniques": clones['uniques']
-                          }, f)
+                      # Get traffic data
+                      try:
+                          views = repo.get_views_traffic()
+                          clones = repo.get_clones_traffic()
+                          
+                          with open(f"{repo_dir}/views.json", "w") as f:
+                              json.dump({
+                                  "views": [{
+                                      "timestamp": v.timestamp.isoformat(),
+                                      "count": v.count,
+                                      "uniques": v.uniques
+                                  } for v in views['views']],
+                                  "count": views['count'],
+                                  "uniques": views['uniques']
+                              }, f)
+                          
+                          with open(f"{repo_dir}/clones.json", "w") as f:
+                              json.dump({
+                                  "clones": [{
+                                      "timestamp": c.timestamp.isoformat(),
+                                      "count": c.count,
+                                      "uniques": c.uniques
+                                  } for c in clones['clones']],
+                                  "count": clones['count'],
+                                  "uniques": clones['uniques']
+                              }, f)
+                          
+                      except Exception as e:
+                          print(f"⚠️ Couldn't get traffic for {repo.name}: {str(e)}")
+                      
+                      time.sleep(1)  # Rate limit protection
                       
                   except Exception as e:
-                      print(f"⚠️ Couldn't get traffic for {repo.name}: {str(e)}")
-                  
-                  # Rate limit protection
-                  time.sleep(1)
-                  
-              except Exception as e:
-                  print(f"❌ Error processing {repo.name}: {str(e)}")
-          
-          # Save repository index (used by the HTML page)
-          with open(f"{data_dir}/repo-info.json", "w") as f:
-              json.dump(repo_index, f, indent=2)
-          
-          print(f"✅ Processed {len(repos)} repositories")
+                      print(f"❌ Error processing {repo.name}: {str(e)}")
+              
+              # Save repository index
+              with open(f"{data_dir}/repo-info.json", "w") as f:
+                  json.dump(repo_index, f, indent=2)
+              
+              print(f"✅ Successfully processed {len(repos)} repositories")
+              
+          except Exception as e:
+              print(f"🔥 Critical error: {str(e)}")
+              raise
           EOF
 
       - name: Commit and push changes
