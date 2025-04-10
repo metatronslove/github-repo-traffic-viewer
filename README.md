@@ -79,7 +79,6 @@ Bu proje MIT lisansı altında lisanslanmıştır - detaylar için [LICENSE](LIC
 ---
 
 **Not**: Bu araç sadece fork yapan kullanıcının kendi depolarının trafik verilerini gösterir. Başka kullanıcıların verilerini görüntülemez.
-```
 
 ## Önemli Noktalar
 
