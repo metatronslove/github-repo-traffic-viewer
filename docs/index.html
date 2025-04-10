@@ -228,7 +228,7 @@
 		// 2. Statik JSON'dan trafik verilerini oku
 		async function fetchTrafficData(repoName) {
 			try {
-				const baseUrl = window.location.origin; // Otomatik olarak mevcut domain'i al
+				const baseUrl = window.location; // Otomatik olarak mevcut domain'i al
 				const [viewsRes, clonesRes] = await Promise.all([
 					fetch(`${baseUrl}/data/repos/${repoName}/views.json`),
 					fetch(`${baseUrl}/data/repos/${repoName}/clones.json`)
@@ -260,7 +260,7 @@
 		// 4. Tüm depoları al (artık limit yok)
 		async function fetchAllRepos() {
 			try {
-				const baseUrl = window.location.origin; // Otomatik olarak mevcut domain'i al
+				const baseUrl = window.location; // Otomatik olarak mevcut domain'i al
 				const response = await fetch(`${baseUrl}/data/repo-info.json`);
 				if (!response.ok) throw new Error('Repository list not found');
 				return await response.json();
