@@ -1,0 +1,36 @@
+name: GitHub Traffic Verisini Topla
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Her saat başı çalışır (değiştirilebilir)
+  workflow_dispatch:      # Manuel tetikleme
+
+jobs:
+  fetch-traffic:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Repo'yu klonla
+        uses: actions/checkout@v3
+
+      - name: Trafik verilerini al
+        run: |
+          mkdir -p docs/data
+          curl -H "Accept: application/vnd.github+json" \
+               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+               https://api.github.com/repos/${{ github.repository }}/traffic/views > docs/data/views.json
+
+          curl -H "Accept: application/vnd.github+json" \
+               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+               https://api.github.com/repos/${{ github.repository }}/traffic/clones > docs/data/clones.json
+
+      - name: Değişiklikleri commitle
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add docs/data/*.json
+          git commit -m "🔄 Trafik verileri güncellendi" || echo "Değişiklik yok"
+          git push
