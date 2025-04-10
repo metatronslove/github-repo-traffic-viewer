@@ -238,12 +238,24 @@ canvas {
 		let currentPage = 1;
 		let reposPerPage = 25;
 		let totalPages = 1;
+		
+// Tüm senaryoları kapsayan basePath belirleme
+function getBasePath() {
+    // 1. GitHub Pages için otomatik tespit
+    if (window.location.host.includes('github.io')) {
+        const pathParts = window.location.pathname.split('/');
+        // Örnek: "/username/repo/" için -> "/username/repo"
+        return pathParts.slice(0, 3).join('/');
+    }
+    // 2. Local development için
+    return '';
+}
 
 		// 2. Statik JSON'dan trafik verilerini oku
 async function fetchTrafficData(repoName) {
     try {
         // GitHub Pages için doğru base URL'yi oluştur
-        const basePath = window.location.pathname.split('/').slice(0, 3).join('/');
+        const basePath = getBasePath();
         
         const [viewsRes, clonesRes] = await Promise.all([
             fetch(`${basePath}/data/repos/${encodeURIComponent(repoName)}/views.json`),
@@ -290,17 +302,23 @@ async function fetchTrafficData(repoName) {
 		// 4. Tüm depoları al (artık limit yok)
 async function fetchAllRepos() {
     try {
-        const baseUrl = window.location.origin;
-        const response = await fetch(`${baseUrl}/data/repo-info.json`);
-        if (!response.ok) throw new Error('Repository list not found');
-        const data = await response.json();
+        const basePath = getBasePath();
+        const response = await fetch(`${basePath}/data/repo-info.json`);
         
-        // Eğer data doğrudan dizi değilse, repositories özelliğini kontrol et
+        if (!response.ok) {
+            // Fallback: Mutlak URL deneyelim
+            const absoluteUrl = `https://${window.location.host}${basePath}/data/repo-info.json`;
+            const fallbackResponse = await fetch(absoluteUrl);
+            if (!fallbackResponse.ok) throw new Error('Repository list not found');
+            return await fallbackResponse.json();
+        }
+        
+        const data = await response.json();
         return Array.isArray(data) ? { repositories: data } : data;
     } catch (error) {
         console.error('Error loading repositories:', error);
         showInfoBox();
-        return { repositories: [] }; // Boş bir repositories dizisi döndür
+        return { repositories: [] };
     }
 }
 
