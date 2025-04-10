@@ -228,10 +228,14 @@
 		// 2. Statik JSON'dan trafik verilerini oku
 		async function fetchTrafficData(repoName) {
 			try {
-				const baseUrl = window.location; // Otomatik olarak mevcut domain'i al
+				// Relative path kullanarak doğru veri yolunu bul
+				const basePath = window.location.pathname.includes('github.io') 
+					? window.location.pathname.split('/').slice(0, 3).join('/')  // GitHub Pages yapısı için
+					: '';
+
 				const [viewsRes, clonesRes] = await Promise.all([
-					fetch(`${baseUrl}/data/repos/${repoName}/views.json`),
-					fetch(`${baseUrl}/data/repos/${repoName}/clones.json`)
+					fetch(`${basePath}/data/repos/${repoName}/views.json`),
+					fetch(`${basePath}/data/repos/${repoName}/clones.json`)
 				]);
         
 				if (!viewsRes.ok || !clonesRes.ok) throw new Error('Traffic data not found');
