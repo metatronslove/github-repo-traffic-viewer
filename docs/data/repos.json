@@ -1,0 +1,5 @@
+{
+  "message": "Resource not accessible by integration",
+  "documentation_url": "https://docs.github.com/rest/repos/repos#list-repositories-for-the-authenticated-user",
+  "status": "403"
+}
