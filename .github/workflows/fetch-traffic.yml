@@ -35,9 +35,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # Cache hatasını önlemek için requirements.txt oluştur
-          echo "pygithub=<1.59.0" > requirements.txt          
-          python -m pip install pygithub=<1.59.0
+          echo "pygithub==1.59.0" > requirements.txt
+          pip install -r requirements.txt
 
       # 4. Veri toplama öncesi hazırlık
       - name: Prepare data environment
