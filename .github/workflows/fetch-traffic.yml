@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      metadata: read  # Eklenen yeni izin
+      metadata: read  # Repo listesi için gerekli
 
     steps:
       - name: Repo'yu klonla
@@ -31,17 +31,21 @@ jobs:
       - name: Repo listesini kaydet
         run: |
           mkdir -p docs/data
-          # Organization repos için farklı endpoint kullanabilirsiniz
-          #curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-          #     https://api.github.com/orgs/ORGANIZATION_NAME/repos > docs/data/repos.json
-          # Veya sadece current repo bilgilerini alın
+          # Current repo bilgilerini al
           curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                https://api.github.com/repos/${{ github.repository }} > docs/data/repos.json
+               https://api.github.com/repos/${{ github.repository }} > docs/data/repos.json
+
+      - name: Artefakt olarak yükle (timestamp ile)
+        uses: actions/upload-artifact@v3
+        with:
+          name: traffic-data-${{ github.run_id }}-${{ github.run_number }}
+          path: docs/data/
+          retention-days: 1  # 1 gün sakla (isteğe bağlı)
 
       - name: Değişiklikleri commitle
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add docs/data/*.json
-          git commit -m "🔄 Trafik verileri güncellendi" || echo "Değişiklik yok"
+          git commit -m "🔄 Trafik verileri güncellendi - Run ${{ github.run_number }}" || echo "Değişiklik yok"
           git push
