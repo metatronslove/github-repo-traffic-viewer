@@ -12,7 +12,7 @@ jobs:
   traffic-collector:
     runs-on: ubuntu-latest
     concurrency: 
-      group: traffic-${{ github.ref }}  # Aynı anda tek işlem
+      group: traffic-${{ github.ref }}
       cancel-in-progress: true
 
     steps:
@@ -40,13 +40,12 @@ jobs:
       # 4. Veri toplama öncesi hazırlık
       - name: Prepare data environment
         run: |
-          # Tüm eski verileri atomik şekilde sil
-          rm -rf docs/data
+          rm -rf docs/data  # Atomik silme
           mkdir -p docs/data/repos
-          echo '{"repositories":[]}' > docs/data/repo-info.json
+          echo '{"repositories":[]}' > docs/data/repo-info.json  # Boş JSON oluştur
           echo "DATA_DIR=docs/data" >> $GITHUB_ENV
 
-      # 5. Veri toplama işlemi
+      # 5. Veri toplama işlemi (Çakışmaları önlemek için repo-info.json'ı her seferinde sıfırla)
       - name: Collect traffic data
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
@@ -58,21 +57,19 @@ jobs:
           import time
           from datetime import datetime
 
-          # 1. GitHub bağlantısı
           g = Github(os.environ['GH_TOKEN'])
           data_dir = os.environ['DATA_DIR']
 
-          # 2. Repo bilgilerini yükle
+          # Her çalışmada repo-info.json'ı sıfırla
           repo_info_path = os.path.join(data_dir, 'repo-info.json')
           repo_data = {"repositories": []}
 
           try:
-              # 3. Tüm repoları işle
               for repo in g.get_user().get_repos(type='all'):
                   repo_dir = os.path.join(data_dir, 'repos', repo.name)
                   os.makedirs(repo_dir, exist_ok=True)
 
-                  # 4. Views verisi
+                  # Views verisi
                   views_path = os.path.join(repo_dir, 'views.json')
                   try:
                       views = repo.get_views_traffic()
@@ -88,9 +85,9 @@ jobs:
                           }, f)
                   except Exception as e:
                       print(f"⚠️ Views error: {repo.name} - {str(e)}")
-                      open(views_path, 'w').close()  # Boş dosya
+                      open(views_path, 'w').close()
 
-                  # 5. Clones verisi
+                  # Clones verisi
                   clones_path = os.path.join(repo_dir, 'clones.json')
                   try:
                       clones = repo.get_clones_traffic()
@@ -106,9 +103,9 @@ jobs:
                           }, f)
                   except Exception as e:
                       print(f"⚠️ Clones error: {repo.name} - {str(e)}")
-                      open(clones_path, 'w').close()  # Boş dosya
+                      open(clones_path, 'w').close()
 
-                  # 6. Metadata güncelleme
+                  # Metadata güncelleme
                   repo_data["repositories"].append({
                       "name": repo.name,
                       "last_updated": datetime.now().isoformat(),
@@ -118,32 +115,25 @@ jobs:
 
                   time.sleep(2)  # Rate limit koruması
 
-              # 7. Repo bilgilerini kaydet
+              # Son verileri kaydet
               with open(repo_info_path, 'w') as f:
                   json.dump(repo_data, f, indent=2, sort_keys=True)
-
-              print(f"✅ Processed {len(repo_data['repositories']} repos")
+              print(f"✅ Processed {len(repo_data['repositories'])} repos")
 
           except Exception as e:
+              # Hata durumunda repo-info.json'ı temizle
+              with open(repo_info_path, 'w') as f:
+                  json.dump({"repositories": []}, f)
               print(f"🔥 Critical error: {str(e)}")
               raise
           EOF
 
-      # 6. Değişiklikleri atomik olarak işle
+      # 6. Değişiklikleri güvenli şekilde işle (Rebase yerine basit pull)
       - name: Commit & Push
         run: |
-          # 1. Git yapılandırması
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-
-          # 2. Tüm değişiklikleri ekle
           git add --force docs/data/
-
-          # 3. Commit oluştur
           git commit -m "📊 Traffic data snapshot $(date '+%Y-%m-%d %H:%M')" || echo "No changes"
-
-          # 4. Uzak depoyla senkronize et
-          git pull --rebase origin main
-
-          # 5. Force push (çakışmaları önlemek için)
+          git pull origin main  # Rebase kaldırıldı
           git push origin main --force-with-lease
