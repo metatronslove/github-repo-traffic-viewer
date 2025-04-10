@@ -27,6 +27,13 @@ jobs:
                -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                https://api.github.com/repos/${{ github.repository }}/traffic/clones > docs/data/clones.json
 
+      - name: Repo listesini kaydet
+        run: |
+          mkdir -p docs/data
+          # Tüm repoları al ve JSON'a kaydet
+          curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+               https://api.github.com/user/repos > docs/data/repos.json
+
       - name: Değişiklikleri commitle
         run: |
           git config user.name github-actions
