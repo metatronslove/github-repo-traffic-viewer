@@ -256,7 +256,7 @@
 		async function fetchAllRepos() {
 			try {
 				// Repo listesini static JSON'dan al
-				const response = await fetch('data/repos.json');
+				const response = await fetch('data/repos-info.json');
 				if (!response.ok) throw new Error('Depo listesi bulunamadı');
         
 				const repos = await response.json();
