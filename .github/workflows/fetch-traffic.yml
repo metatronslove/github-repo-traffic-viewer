@@ -7,13 +7,10 @@ on:
 
 permissions:
   contents: write
-  metadata: read
-  pull-requests: read
 
 jobs:
   fetch-traffic-data:
     runs-on: ubuntu-latest
-    environment: traffic-collection
     
     steps:
       - name: Checkout repository
@@ -44,19 +41,17 @@ jobs:
           from github import Github
           import os
           import json
-          from datetime import datetime
           import time
 
-          # Use PAT instead of GITHUB_TOKEN
           g = Github(os.environ['GH_TOKEN'])
           data_dir = os.environ['DATA_DIR']
           
           try:
-              # Get all accessible repositories
+              # Get accessible repositories
               repos = []
               for repo in g.get_user().get_repos(type='all'):
                   repos.append(repo)
-                  time.sleep(0.5)  # Rate limit protection
+                  time.sleep(0.5)
               
               repo_index = []
               
@@ -65,7 +60,6 @@ jobs:
                       repo_dir = f"{data_dir}/{repo.name}"
                       os.makedirs(repo_dir, exist_ok=True)
                       
-                      # Save repo metadata for the dashboard
                       repo_index.append({
                           "name": repo.name,
                           "full_name": repo.full_name,
@@ -73,7 +67,6 @@ jobs:
                           "updated_at": repo.updated_at.isoformat()
                       })
                       
-                      # Get traffic data
                       try:
                           views = repo.get_views_traffic()
                           clones = repo.get_clones_traffic()
@@ -103,16 +96,15 @@ jobs:
                       except Exception as e:
                           print(f"⚠️ Couldn't get traffic for {repo.name}: {str(e)}")
                       
-                      time.sleep(1)  # Rate limit protection
+                      time.sleep(1)
                       
                   except Exception as e:
                       print(f"❌ Error processing {repo.name}: {str(e)}")
               
-              # Save repository index
               with open(f"{data_dir}/repo-info.json", "w") as f:
                   json.dump(repo_index, f, indent=2)
               
-              print(f"✅ Successfully processed {len(repos)} repositories")
+              print(f"✅ Processed {len(repos)} repositories")
               
           except Exception as e:
               print(f"🔥 Critical error: {str(e)}")
