@@ -2,7 +2,7 @@ name: GitHub Traffic Data Collector
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Saatlik çalıştırma
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -29,9 +29,10 @@ jobs:
           python -m pip install pygithub==1.59.0
           python -m pip install pyyaml
 
-      - name: Clean previous data
+      - name: Clean and setup
         run: |
-          rm -rf docs/data/repos/  # Sadece repos klasörünü temizle
+          # Sadece eski trafik verilerini sil, repo-info.json koru
+          find docs/data/repos/ -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} +
           mkdir -p docs/data/repos
           echo "DATA_DIR=docs/data" >> $GITHUB_ENV
 
@@ -49,10 +50,18 @@ jobs:
           data_dir = os.environ['DATA_DIR']
           
           try:
-              repos = list(g.get_user().get_repos(type='all'))
-              repo_index = []
+              # Mevcut repo-info.json'ı yükle veya oluştur
+              repo_info_path = f"{data_dir}/repo-info.json"
+              if os.path.exists(repo_info_path):
+                  with open(repo_info_path, 'r') as f:
+                      existing_data = json.load(f)
+              else:
+                  existing_data = []
               
-              for repo in repos:
+              existing_repos = {repo['name']: repo for repo in existing_data}
+              updated_repos = []
+              
+              for repo in g.get_user().get_repos(type='all'):
                   try:
                       repo_dir = f"{data_dir}/repos/{repo.name}"
                       os.makedirs(repo_dir, exist_ok=True)
@@ -61,6 +70,7 @@ jobs:
                       views_data = {"views": [], "count": 0, "uniques": 0}
                       clones_data = {"clones": [], "count": 0, "uniques": 0}
                       
+                      # Views verisi
                       try:
                           traffic = repo.get_views_traffic()
                           views_data = {
@@ -77,6 +87,7 @@ jobs:
                       except Exception as e:
                           print(f"⚠️ Views error for {repo.name}: {str(e)}")
                       
+                      # Clones verisi
                       try:
                           traffic = repo.get_clones_traffic()
                           clones_data = {
@@ -93,44 +104,39 @@ jobs:
                       except Exception as e:
                           print(f"⚠️ Clones error for {repo.name}: {str(e)}")
                       
-                      # Repo bilgilerini güncelle
-                      repo_index.append({
+                      # Repo bilgisini güncelle veya oluştur
+                      repo_info = existing_repos.get(repo.name, {
                           "name": repo.name,
                           "full_name": repo.full_name,
                           "private": repo.private,
-                          "updated_at": repo.updated_at.isoformat(),
+                          "updated_at": repo.updated_at.isoformat()
+                      })
+                      repo_info.update({
+                          "last_updated": time.strftime('%Y-%m-%dT%H:%M:%SZ'),
                           "has_views": len(views_data["views"]) > 0,
                           "has_clones": len(clones_data["clones"]) > 0
                       })
+                      updated_repos.append(repo_info)
                       
-                      time.sleep(1)  # Rate limit koruması
+                      time.sleep(1)
                       
                   except Exception as e:
-                      print(f"❌ Repo processing error: {repo.name} - {str(e)}")
+                      print(f"❌ Error processing {repo.name}: {str(e)}")
               
-              # Repo index dosyasını güvenli şekilde yaz
-              with open(f"{data_dir}/repo-info.json", "w") as f:
-                  json.dump(sorted(repo_index, key=lambda x: x['name']), f, indent=2)
+              # Güncellenmiş veriyi yaz
+              with open(repo_info_path, 'w') as f:
+                  json.dump(sorted(updated_repos, key=lambda x: x['name']), f, indent=2)
               
-              print(f"✅ Successfully processed {len(repos)} repositories")
+              print(f"✅ Successfully processed {len(updated_repos)} repositories")
               
           except Exception as e:
               print(f"🔥 Critical error: {str(e)}")
               raise
           EOF
 
-      - name: Resolve merge conflicts
-        run: |
-          # Çakışmaları otomatik çöz (yerel değişiklikleri koru)
-          git checkout --ours docs/data/repo-info.json || true
-          
-          # Alternatif: Boş bir index dosyası oluştur
-          if [ ! -f docs/data/repo-info.json ]; then
-            echo '[]' > docs/data/repo-info.json
-          fi
-
       - name: Commit and push changes
         run: |
+          # Git ayarları
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
@@ -141,6 +147,10 @@ jobs:
           commit_msg="📊 Updated traffic data $(date '+%Y-%m-%d %H:%M')"
           
           # Atomic commit ve push
-          git diff-index --quiet HEAD || git commit -m "$commit_msg"
-          git pull --rebase origin main
-          git push origin main
+          if git diff-index --quiet HEAD -- docs/data/repos; then
+            echo "No changes in traffic data to commit"
+          else
+            git commit -m "$commit_msg"
+            git pull --rebase origin main
+            git push origin main
+          fi
