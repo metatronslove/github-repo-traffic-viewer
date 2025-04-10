@@ -20,32 +20,62 @@ jobs:
           mkdir -p docs/data/repos
           echo "REPOS_DIR=docs/data/repos" >> $GITHUB_ENV
 
-      - name: Get all repositories
-        id: get-repos
-        run: |
-          # Tüm repoları al (sayfalandırma desteği ile)
-          page=1
-          all_repos=""
-          while true; do
-            echo "Fetching page $page"
-            response=$(curl -s \
-              -H "Authorization: Bearer $GH_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/user/repos?per_page=100&page=$page&type=all")
-            
-            if echo "$response" | jq -e 'length == 0' >/dev/null; then
-              break  # Başka repo yok
-            fi
-            
-            repos=$(echo "$response" | jq -r '.[].name')
-            all_repos="$all_repos $repos"
-            page=$((page+1))
-            sleep 1  # Rate limit koruması
-          done
-          
-          echo "Found repositories:$all_repos"
-          echo "repos=${all_repos}" >> $GITHUB_OUTPUT
-
+- name: Get all repositories
+  id: get-repos
+  env:
+    GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+  run: |
+    # Debug: Token kontrolü
+    echo "Token first 5 chars: ${GH_TOKEN:0:5}..."
+    
+    # API'den veri çekme
+    page=1
+    all_repos=()
+    while true; do
+      echo "Fetching page $page"
+      response=$(curl -s -w "%{http_code}" \
+        -H "Authorization: Bearer $GH_TOKEN" \
+        -H "Accept: application/vnd.github+json" \
+        "https://api.github.com/user/repos?per_page=100&page=$page&type=all")
+      
+      # HTTP durum kodunu ayır
+      http_code=${response: -3}
+      response_content=${response%???}
+      
+      # Hata kontrolü
+      if [ "$http_code" -ne 200 ]; then
+        echo "API Error (HTTP $http_code):"
+        echo "$response_content" | jq .
+        exit 1
+      fi
+      
+      # JSON validasyonu
+      if ! echo "$response_content" | jq -e 'type == "array"' >/dev/null; then
+        echo "Invalid API response format:"
+        echo "$response_content" > response_error.json
+        cat response_error.json
+        exit 1
+      fi
+      
+      # Repo isimlerini çıkart
+      repos=$(echo "$response_content" | jq -r '.[].name? // empty')
+      if [ -z "$repos" ]; then
+        break  # Başka repo yok
+      fi
+      
+      # Repoları diziye ekle
+      while IFS= read -r repo; do
+        all_repos+=("$repo")
+      done <<< "$repos"
+      
+      page=$((page+1))
+      sleep 1
+    done
+    
+    # Repoları boşlukla ayrılmış string olarak kaydet
+    echo "Found ${#all_repos[@]} repositories:"
+    printf '%s\n' "${all_repos[@]}"
+    echo "repos=${all_repos[*]}" >> $GITHUB_OUTPUT
       - name: Fetch traffic data
         run: |
           for repo in ${{ steps.get-repos.outputs.repos }}; do
