@@ -16,7 +16,7 @@ jobs:
       cancel-in-progress: true
     
     steps:
-      - name: Checkout with cleanup
+      - name: Checkout with deep cleanup
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
@@ -30,13 +30,14 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install pygithub==1.59.0 pyyaml
+          python -m pip install pygithub pyyaml
 
-      - name: Prepare data directory
+      - name: Atomic data preparation
         run: |
-          # Sadece eski trafik verilerini sil
-          find docs/data/repos/ -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} +
+          # Tüm eski verileri atomik şekilde sil
+          rm -rf docs/data/
           mkdir -p docs/data/repos
+          echo "[]" > docs/data/repo-info.json
           echo "DATA_DIR=docs/data" >> $GITHUB_ENV
 
       - name: Collect traffic data
@@ -53,91 +54,94 @@ jobs:
           g = Github(os.environ['GH_TOKEN'])
           data_dir = os.environ['DATA_DIR']
           
-          # Mevcut repo-info.json yoksa oluştur
-          repo_info_path = f"{data_dir}/repo-info.json"
-          repo_data = []
-          
           try:
-              for repo in g.get_user().get_repos(type='all'):
+              repo_data = []
+              repos = list(g.get_user().get_repos(type='all'))
+              
+              for repo in repos:
                   try:
-                      repo_dir = f"{data_dir}/repos/{repo.name}"
+                      repo_dir = os.path.join(data_dir, "repos", repo.name)
                       os.makedirs(repo_dir, exist_ok=True)
                       
-                      # Trafik verilerini topla
-                      traffic_data = {
-                          "views": {"views": [], "count": 0, "uniques": 0},
-                          "clones": {"clones": [], "count": 0, "uniques": 0}
-                      }
-                      
+                      # Views verisi
+                      views_path = os.path.join(repo_dir, "views.json")
                       try:
                           views = repo.get_views_traffic()
-                          traffic_data["views"] = {
-                              "views": [{
-                                  "timestamp": v.timestamp.isoformat(),
-                                  "count": v.count,
-                                  "uniques": v.uniques
-                              } for v in views["views"]],
-                              "count": views["count"],
-                              "uniques": views["uniques"]
-                          }
-                          with open(f"{repo_dir}/views.json", "w") as f:
-                              json.dump(traffic_data["views"], f)
+                          with open(views_path, 'w') as f:
+                              json.dump({
+                                  "views": [{
+                                      "timestamp": v.timestamp.isoformat(),
+                                      "count": v.count,
+                                      "uniques": v.uniques
+                                  } for v in views["views"]],
+                                  "count": views["count"],
+                                  "uniques": views["uniques"]
+                              }, f)
                       except Exception as e:
                           print(f"⚠️ Views error for {repo.name}: {str(e)}")
+                          open(views_path, 'a').close()  # Boş dosya oluştur
                       
+                      # Clones verisi
+                      clones_path = os.path.join(repo_dir, "clones.json")
                       try:
                           clones = repo.get_clones_traffic()
-                          traffic_data["clones"] = {
-                              "clones": [{
-                                  "timestamp": c.timestamp.isoformat(),
-                                  "count": c.count,
-                                  "uniques": c.uniques
-                              } for c in clones["clones"]],
-                              "count": clones["count"],
-                              "uniques": clones["uniques"]
-                          }
-                          with open(f"{repo_dir}/clones.json", "w") as f:
-                              json.dump(traffic_data["clones"], f)
+                          with open(clones_path, 'w') as f:
+                              json.dump({
+                                  "clones": [{
+                                      "timestamp": c.timestamp.isoformat(),
+                                      "count": c.count,
+                                      "uniques": c.uniques
+                                  } for c in clones["clones"]],
+                                  "count": clones["count"],
+                                  "uniques": clones["uniques"]
+                              }, f)
                       except Exception as e:
                           print(f"⚠️ Clones error for {repo.name}: {str(e)}")
+                          open(clones_path, 'a').close()  # Boş dosya oluştur
                       
-                      # Repo bilgilerini güncelle
+                      # Repo metadata
                       repo_data.append({
                           "name": repo.name,
                           "full_name": repo.full_name,
                           "private": repo.private,
                           "updated_at": datetime.now().isoformat(),
-                          "has_views": len(traffic_data["views"]["views"]) > 0,
-                          "has_clones": len(traffic_data["clones"]["clones"]) > 0
+                          "last_checked": datetime.now().isoformat()
                       })
                       
-                      time.sleep(1.5)  # Rate limit koruması
+                      time.sleep(2)  # Güçlü rate limit koruması
                       
                   except Exception as e:
-                      print(f"❌ Error processing {repo.name}: {str(e)}")
+                      print(f"❌ Repo processing failed: {repo.name} - {str(e)}")
               
-              # Repo bilgilerini yaz
-              with open(repo_info_path, "w") as f:
+              # Atomik repo-info güncelleme
+              with open(os.path.join(data_dir, "repo-info.json"), 'w') as f:
                   json.dump(repo_data, f, indent=2)
               
-              print(f"✅ Processed {len(repo_data)} repositories")
+              print(f"✅ Successfully processed {len(repos)} repositories")
               
           except Exception as e:
-              print(f"🔥 Critical error: {str(e)}")
+              print(f"🔥 Critical failure: {str(e)}")
               raise
           EOF
 
-      - name: Force push changes
+      - name: Atomic git operations
         run: |
+          # Tüm dosya izinlerini düzelt
+          find docs/data -type f -exec chmod 644 {} \;
+          find docs/data -type d -exec chmod 755 {} \;
+          
+          # Git ayarları
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
           # Tüm değişiklikleri ekle
-          git add -f docs/data/
+          git add --all docs/data/
           
           # Commit oluştur
-          git commit -m "📊 Updated traffic data [skip ci]" || echo "No changes to commit"
+          git commit -m "📊 Atomic traffic data update [skip ci]" || echo "No changes to commit"
           
-          # Force push yap (çakışmaları önlemek için)
-          git pull origin main --rebase --allow-unrelated-histories || true
+          # Yeniden başlatılmış senkronizasyon
+          git fetch origin main
+          git reset --soft origin/main
+          [ -z "$(git status --porcelain)" ] || git commit -m "📊 Traffic data update"
           git push origin main --force-with-lease
