@@ -31,7 +31,6 @@ jobs:
 
       - name: Clean previous data
         run: |
-          # Clean docs/data directory
           rm -rf docs/data/
           mkdir -p docs/data/repos
           echo "DATA_DIR=docs/data" >> $GITHUB_ENV
@@ -69,10 +68,9 @@ jobs:
                           "updated_at": repo.updated_at.isoformat()
                       })
                       
+                      # Views data (always try to fetch)
                       try:
                           views = repo.get_views_traffic()
-                          clones = repo.get_clones_traffic()
-                          
                           with open(f"{repo_dir}/views.json", "w") as f:
                               json.dump({
                                   "views": [{
@@ -83,22 +81,34 @@ jobs:
                                   "count": views['count'],
                                   "uniques": views['uniques']
                               }, f)
-                          
-                          with open(f"{repo_dir}/clones.json", "w") as f:
-                              json.dump({
-                                  "clones": [{
-                                      "timestamp": c.timestamp.isoformat(),
-                                      "count": c.count,
-                                      "uniques": c.uniques
-                                  } for c in clones['clones']],
-                                  "count": clones['count'],
-                                  "uniques": clones['uniques']
-                              }, f)
-                          
+                          print(f"✅ Saved views for {repo.name}")
                       except Exception as e:
-                          print(f"⚠️ Couldn't get traffic for {repo.name}: {str(e)}")
+                          print(f"⚠️ Couldn't get views for {repo.name}: {str(e)}")
                       
-                      time.sleep(1)
+                      # Clones data (retry if failed)
+                      max_retries = 3
+                      for attempt in range(max_retries):
+                          try:
+                              clones = repo.get_clones_traffic()
+                              with open(f"{repo_dir}/clones.json", "w") as f:
+                                  json.dump({
+                                      "clones": [{
+                                          "timestamp": c.timestamp.isoformat(),
+                                          "count": c.count,
+                                          "uniques": c.uniques
+                                      } for c in clones['clones']],
+                                      "count": clones['count'],
+                                      "uniques": clones['uniques']
+                                  }, f)
+                              print(f"✅ Saved clones for {repo.name} (attempt {attempt + 1})")
+                              break
+                          except Exception as e:
+                              if attempt == max_retries - 1:
+                                  print(f"❌ Failed to get clones for {repo.name}: {str(e)}")
+                              else:
+                                  time.sleep(2)  # Wait before retrying
+                      
+                      time.sleep(2)  # Rate limit protection
                       
                   except Exception as e:
                       print(f"❌ Error processing {repo.name}: {str(e)}")
