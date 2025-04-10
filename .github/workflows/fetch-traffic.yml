@@ -3,13 +3,14 @@ name: GitHub Traffic Data Collector
 on:
   schedule:
     - cron: '0 * * * *'  # Her saat başı çalışır
-  workflow_dispatch:
+  workflow_dispatch:      # Manuel çalıştırma için
 
 jobs:
-  fetch-traffic:
+  fetch-traffic-data:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      metadata: read
       pull-requests: write
 
     steps:
@@ -19,51 +20,82 @@ jobs:
       - name: Set up environment
         run: |
           mkdir -p docs/data/repos
-          echo "REPOS_DATA_DIR=docs/data/repos" >> $GITHUB_ENV
+          echo "DATA_DIR=docs/data" >> $GITHUB_ENV
+          echo "REPOS_DIR=docs/data/repos" >> $GITHUB_ENV
 
-      - name: Get all repositories
+      - name: Get repository list
         id: get-repos
         run: |
-          repos=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                 https://api.github.com/user/repos | jq -r '.[].name')
-          echo "repos=${repos}" >> $GITHUB_OUTPUT
-          echo "Found repositories: ${repos}"
+          # Tüm repoları al (sayfalandırmayı destekler)
+          page=1
+          all_repos=""
+          while true; do
+            echo "Fetching page $page"
+            response=$(curl -s \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/user/repos?per_page=100&page=$page")
+            
+            # Hata kontrolü
+            if echo "$response" | jq -e 'type == "array"' >/dev/null; then
+              repos=$(echo "$response" | jq -r '.[].name')
+              if [ -z "$repos" ]; then
+                break  # Başka repo yok
+              fi
+              all_repos="$all_repos $repos"
+              page=$((page+1))
+              sleep 1  # Rate limit koruması
+            else
+              echo "API Error:"
+              echo "$response" | jq .
+              exit 1
+            fi
+          done
+          
+          echo "Found repositories:$all_repos"
+          echo "repos=${all_repos}" >> $GITHUB_OUTPUT
 
-      - name: Fetch traffic data for each repo
+      - name: Fetch traffic data for each repository
         run: |
           for repo in ${{ steps.get-repos.outputs.repos }}; do
             echo "Processing repository: $repo"
             
-            # Create directory for repo
-            mkdir -p "$REPOS_DATA_DIR/$repo"
+            # Klasör oluştur
+            mkdir -p "$REPOS_DIR/$repo"
             
-            # Get views data
-            curl -s -H "Accept: application/vnd.github+json" \
-                 -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                 https://api.github.com/repos/${{ github.repository_owner }}/$repo/traffic/views \
-                 > "$REPOS_DATA_DIR/$repo/views.json"
+            # Görüntüleme verileri
+            echo "Fetching views for $repo"
+            curl -s \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository_owner }}/$repo/traffic/views" \
+              > "$REPOS_DIR/$repo/views.json"
             
-            # Get clones data
-            curl -s -H "Accept: application/vnd.github+json" \
-                 -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                 https://api.github.com/repos/${{ github.repository_owner }}/$repo/traffic/clones \
-                 > "$REPOS_DATA_DIR/$repo/clones.json"
+            # Klonlama verileri
+            echo "Fetching clones for $repo"
+            curl -s \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository_owner }}/$repo/traffic/clones" \
+              > "$REPOS_DIR/$repo/clones.json"
             
-            # Small delay to avoid rate limiting
-            sleep 1
+            sleep 1  # Rate limit koruması
           done
 
-      - name: Save repository list
+      - name: Generate repository index
         run: |
-          curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-               https://api.github.com/user/repos \
-               | jq '[.[] | {name: .name, full_name: .full_name}]' \
-               > docs/data/repo-info.json
+          # Tüm repoların temel bilgilerini kaydet
+          curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/user/repos?per_page=100" \
+            | jq '[.[] | {name: .name, full_name: .full_name, private: .private, updated_at: .updated_at}]' \
+            > "$DATA_DIR/repo-info.json"
 
       - name: Commit and push changes
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add docs/data/*
-          git commit -m "🔄 Traffic data updated for all repos" || echo "No changes to commit"
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add docs/data/
+          git commit -m "🔄 Update traffic data $(date '+%Y-%m-%d %H:%M')" || echo "No changes to commit"
           git push
