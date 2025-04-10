@@ -2,42 +2,38 @@ name: GitHub Traffic Data Collector
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Her saat başı
+    - cron: '0 * * * *'  # Runs hourly
   workflow_dispatch:
 
 jobs:
   collect-traffic-data:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Sadece commit yetkisi
+      contents: write  # Only need write for commits
       pull-requests: read
-      metadata: read
 
     steps:
-      # 1. Repoyu klonla
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Trafik verilerini topla
       - name: Fetch traffic data
         run: |
           mkdir -p docs/data
           
-          # Views verisi
+          # Get views data
           curl -H "Accept: application/vnd.github+json" \
                -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                https://api.github.com/repos/${{ github.repository }}/traffic/views > docs/data/views.json
           
-          # Clones verisi
+          # Get clones data
           curl -H "Accept: application/vnd.github+json" \
                -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                https://api.github.com/repos/${{ github.repository }}/traffic/clones > docs/data/clones.json
           
-          # Repo bilgisi
+          # Get basic repo info
           curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                https://api.github.com/repos/${{ github.repository }} > docs/data/repo-info.json
 
-      # 3. Verileri commitle
       - name: Commit collected data
         run: |
           git config user.name "github-actions"
