@@ -228,19 +228,17 @@
 		// 2. Statik JSON'dan trafik verilerini oku
 		async function fetchTrafficData(repoName) {
 			try {
-				console.log(`Loading traffic data for ${repoName}...`);
+				const basePath = window.location.pathname.includes('github.io') ? '' : '/docs';
 				const [viewsRes, clonesRes] = await Promise.all([
-				fetch(`data/repos/${repoName}/views.json`),
-				fetch(`data/repos/${repoName}/clones.json`)
+					fetch(`${basePath}/data/repos/${repoName}/views.json`),
+					fetch(`${basePath}/data/repos/${repoName}/clones.json`)
 				]);
-    
-				if (!viewsRes.ok || !clonesRes.ok) {
-					console.error(`Traffic data not found for ${repoName}`);
-					throw new Error('Traffic data not found');
-				}
-    
+        
+				if (!viewsRes.ok || !clonesRes.ok) throw new Error('Traffic data not found');
+        
 				const views = await viewsRes.json();
 				const clones = await clonesRes.json();
+        
 				return {
 					views: { views: views.views || [] },
 					clones: { clones: clones.clones || [] }
@@ -262,15 +260,10 @@
 		// 4. Tüm depoları al (artık limit yok)
 		async function fetchAllRepos() {
 			try {
-				console.log("Loading repository data...");
-				const response = await fetch('data/repo-info.json');
-				if (!response.ok) {
-					console.error("Failed to load repo-info.json", response.status);
-					throw new Error('Repository list not found');
-				}
-				const data = await response.json();
-				console.log(`Loaded ${data.length} repositories`);
-				return data;
+				const basePath = window.location.pathname.includes('github.io') ? '' : '/docs';
+				const response = await fetch(`${basePath}/data/repo-info.json`);
+				if (!response.ok) throw new Error('Repository list not found');
+				return await response.json();
 			} catch (error) {
 				console.error('Error loading repositories:', error);
 				showInfoBox();
@@ -280,8 +273,10 @@
 
 		// 6. Grafik oluşturma
 		function createChart(canvasId, label, data, labels) {
-			const ctx = document.getElementById(canvasId).getContext('2d');
-			new Chart(ctx, {
+			const ctx = document.getElementById(canvasId);
+			if (!ctx) return;
+			
+			new Chart(ctx.getContext('2d'), {
 				type: 'line',
 				data: {
 					labels: labels,
@@ -290,12 +285,23 @@
 						data: data,
 						borderColor: '#0366d6',
 						backgroundColor: 'rgba(3, 102, 214, 0.1)',
-						tension: 0.3
+						borderWidth: 2,
+						tension: 0.3,
+						fill: true
 					}]
 				},
 				options: {
 					responsive: true,
-					scales: { y: { beginAtZero: true } }
+					maintainAspectRatio: false,
+					scales: {
+						y: { beginAtZero: true },
+						x: {
+							ticks: {
+								maxRotation: 45,
+								minRotation: 45
+							}
+						}
+					}
 				}
 			});
 		}
@@ -386,16 +392,21 @@
 			const reposToShow = allRepos.slice(startIdx, endIdx);
 			
 			document.getElementById('charts-container').innerHTML = '';
-			document.getElementById('loading').textContent = translations[currentLang].loadingAuth;
+			document.getElementById('loading').textContent = translations[currentLang].loadingRepos(0);
+			document.getElementById('per-page-container').style.display = 'block';
 			
+			let loadedCount = 0;
 			for (const repo of reposToShow) {
+				document.getElementById('loading').textContent = 
+					translations[currentLang].loadingRepos(++loadedCount);
+				
 				const trafficData = await fetchTrafficData(repo.name);
-				if (!trafficData || !trafficData.views || !trafficData.clones) continue;
+				if (!trafficData.views.views.length || !trafficData.clones.clones.length) continue;
 
 				const container = document.createElement('div');
 				container.className = 'chart-box';
 				container.innerHTML = `
-					<h3><span class="repo-name">${repo.name}</span> deposu</h3>
+					<h3>${translations[currentLang].repoHeader(repo.name)}</h3>
 					<div class="chart-row">
 						<canvas id="views-${repo.name}" height="150"></canvas>
 						<canvas id="clones-${repo.name}" height="150"></canvas>
@@ -404,23 +415,25 @@
 				document.getElementById('charts-container').appendChild(container);
 
 				// Grafikleri oluştur
-				const viewsLabels = trafficData.views.views.map(v => v.timestamp.split('T')[0]);
-				const viewsData = trafficData.views.views.map(v => v.count);
-				createChart(`views-${repo.name}`, 'Görüntülenmeler', viewsData, viewsLabels);
+				createChart(
+					`views-${repo.name}`,
+					translations[currentLang].views,
+					trafficData.views.views.map(v => v.count),
+					trafficData.views.views.map(v => v.timestamp.split('T')[0])
+				);
 
-				const clonesLabels = trafficData.clones.clones.map(c => c.timestamp.split('T')[0]);
-				const clonesData = trafficData.clones.clones.map(c => c.count);
-				createChart(`clones-${repo.name}`, 'Klonlamalar', clonesData, clonesLabels);
+				createChart(
+					`clones-${repo.name}`,
+					translations[currentLang].clones,
+					trafficData.clones.clones.map(c => c.count),
+					trafficData.clones.clones.map(c => c.timestamp.split('T')[0])
+				);
 			}
 			
+			document.getElementById('pagination').style.display = 'flex';
 			document.getElementById('loading').textContent = 
 				translations[currentLang].pageStats(currentPage, totalPages, allRepos.length);
-			
-			// Repo başlıklarını güncelle
-			document.querySelectorAll('.repo-name').forEach(element => {
-				const repoName = element.textContent;
-				element.parentElement.innerHTML = translations[currentLang].repoHeader(repoName);
-			});
+			setupPagination(allRepos.length);
 		}
 
 		// 11. Ana işlem
