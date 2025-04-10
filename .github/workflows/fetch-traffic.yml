@@ -21,7 +21,7 @@ jobs:
       - name: Get all repositories
         id: get-repos
         env:
-          GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}  # Moved here from job level
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Moved here from job level
         run: |
           echo "Token first 5 chars: ${GH_TOKEN:0:5}..."
           
