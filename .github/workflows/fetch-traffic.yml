@@ -2,7 +2,7 @@ name: GitHub Traffic Data Collector
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 * * * *'  # Runs hourly
   workflow_dispatch:
 
 permissions:
@@ -11,17 +11,13 @@ permissions:
 jobs:
   fetch-traffic-data:
     runs-on: ubuntu-latest
-    concurrency: 
-      group: traffic-data-${{ github.ref }}
-      cancel-in-progress: true
     
     steps:
-      - name: Checkout with deep cleanup
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0
-          clean: true
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -32,14 +28,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           echo "pygithub==1.59.0" > requirements.txt
+          echo "pyyaml" > requirements.txt
           pip install -r requirements.txt
 
-      - name: Atomic data preparation
+      - name: Clean previous data
         run: |
-          # Tüm eski verileri atomik şekilde sil
           rm -rf docs/data/
           mkdir -p docs/data/repos
-          echo "[]" > docs/data/repo-info.json
           echo "DATA_DIR=docs/data" >> $GITHUB_ENV
 
       - name: Collect traffic data
@@ -57,93 +52,87 @@ jobs:
           data_dir = os.environ['DATA_DIR']
           
           try:
-              repo_data = []
-              repos = list(g.get_user().get_repos(type='all'))
+              repos = []
+              for repo in g.get_user().get_repos(type='all'):
+                  repos.append(repo)
+                  time.sleep(0.5)
+              
+              repo_index = []
               
               for repo in repos:
                   try:
-                      repo_dir = os.path.join(data_dir, "repos", repo.name)
+                      repo_dir = f"{data_dir}/repos/{repo.name}"
                       os.makedirs(repo_dir, exist_ok=True)
                       
-                      # Views verisi
-                      views_path = os.path.join(repo_dir, "views.json")
-                      try:
-                          views = repo.get_views_traffic()
-                          with open(views_path, 'w') as f:
-                              json.dump({
-                                  "views": [{
-                                      "timestamp": v.timestamp.isoformat(),
-                                      "count": v.count,
-                                      "uniques": v.uniques
-                                  } for v in views["views"]],
-                                  "count": views["count"],
-                                  "uniques": views["uniques"]
-                              }, f)
-                      except Exception as e:
-                          print(f"⚠️ Views error for {repo.name}: {str(e)}")
-                          open(views_path, 'a').close()  # Boş dosya oluştur
+                      repo_index.append({
+                          "name": repo.name,
+                          "full_name": repo.full_name,
+                          "private": repo.private,
+                          "updated_at": repo.updated_at.isoformat()
+                      })
                       
-                      # Clones verisi
-                      clones_path = os.path.join(repo_dir, "clones.json")
+                      # Views data with new structure
                       try:
-                          clones = repo.get_clones_traffic()
-                          with open(clones_path, 'w') as f:
-                              json.dump({
+                          views_traffic = repo.get_views_traffic()
+                          views_data = {
+                              "views": [{
+                                  "timestamp": v.timestamp.isoformat(),
+                                  "count": v.count,
+                                  "uniques": v.uniques
+                              } for v in views_traffic["views"]],
+                              "count": views_traffic["count"],
+                              "uniques": views_traffic["uniques"]
+                          }
+                          with open(f"{repo_dir}/views.json", "w") as f:
+                              json.dump(views_data, f, indent=2)
+                          print(f"✅ Saved views for {repo.name}")
+                      except Exception as e:
+                          print(f"⚠️ Couldn't get views for {repo.name}: {str(e)}")
+                      
+                      # Clones data with new structure
+                      max_retries = 3
+                      for attempt in range(max_retries):
+                          try:
+                              clones_traffic = repo.get_clones_traffic()
+                              clones_data = {
                                   "clones": [{
                                       "timestamp": c.timestamp.isoformat(),
                                       "count": c.count,
                                       "uniques": c.uniques
-                                  } for c in clones["clones"]],
-                                  "count": clones["count"],
-                                  "uniques": clones["uniques"]
-                              }, f)
-                      except Exception as e:
-                          print(f"⚠️ Clones error for {repo.name}: {str(e)}")
-                          open(clones_path, 'a').close()  # Boş dosya oluştur
+                                  } for c in clones_traffic["clones"]],
+                                  "count": clones_traffic["count"],
+                                  "uniques": clones_traffic["uniques"]
+                              }
+                              with open(f"{repo_dir}/clones.json", "w") as f:
+                                  json.dump(clones_data, f, indent=2)
+                              print(f"✅ Saved clones for {repo.name} (attempt {attempt + 1})")
+                              break
+                          except Exception as e:
+                              if attempt == max_retries - 1:
+                                  print(f"❌ Failed to get clones for {repo.name}: {str(e)}")
+                              else:
+                                  time.sleep(2)
                       
-                      # Repo metadata
-                      repo_data.append({
-                          "name": repo.name,
-                          "full_name": repo.full_name,
-                          "private": repo.private,
-                          "updated_at": datetime.now().isoformat(),
-                          "last_checked": datetime.now().isoformat()
-                      })
-                      
-                      time.sleep(2)  # Güçlü rate limit koruması
+                      time.sleep(2)  # Rate limit protection
                       
                   except Exception as e:
-                      print(f"❌ Repo processing failed: {repo.name} - {str(e)}")
+                      print(f"❌ Error processing {repo.name}: {str(e)}")
               
-              # Atomik repo-info güncelleme
-              with open(os.path.join(data_dir, "repo-info.json"), 'w') as f:
-                  json.dump(repo_data, f, indent=2)
+              with open(f"{data_dir}/repo-info.json", "w") as f:
+                  json.dump(repo_index, f, indent=2)
               
-              print(f"✅ Successfully processed {len(repos)} repositories")
+              print(f"✅ Processed {len(repos)} repositories")
               
           except Exception as e:
-              print(f"🔥 Critical failure: {str(e)}")
+              print(f"🔥 Critical error: {str(e)}")
               raise
           EOF
 
-      - name: Atomic git operations
+      - name: Commit and push changes
         run: |
-          # Tüm dosya izinlerini düzelt
-          find docs/data -type f -exec chmod 644 {} \;
-          find docs/data -type d -exec chmod 755 {} \;
-          
-          # Git ayarları
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          
-          # Tüm değişiklikleri ekle
-          git add --all docs/data/
-          
-          # Commit oluştur
-          git commit -m "📊 Atomic traffic data update [skip ci]" || echo "No changes to commit"
-          
-          # Yeniden başlatılmış senkronizasyon
-          git fetch origin main
-          git reset --soft origin/main
-          [ -z "$(git status --porcelain)" ] || git commit -m "📊 Traffic data update"
-          git push origin main --force-with-lease
+          git add docs/data/
+          git commit -m "📊 Updated traffic data $(date '+%Y-%m-%d %H:%M')" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main
