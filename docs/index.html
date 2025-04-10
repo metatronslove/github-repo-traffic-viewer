@@ -179,6 +179,8 @@ canvas {
 		translations.en.errorLoadingRepos = "Failed to load repository list";
 		translations.tr.noData = "Veri bulunamadı";
 		translations.en.noData = "No data available";
+		translations.tr.errorLoadingData = "Veri yüklenirken hata oluştu";
+		translations.en.errorLoadingData = "Error loading data";
 
 		let currentLang = localStorage.getItem('lang') || 'tr';
 		
@@ -261,10 +263,16 @@ async function fetchTrafficData(repoName) {
         const views = await viewsRes.json();
         const clones = await clonesRes.json();
         
-        return {
+        const trafficData = {
             views: views || { views: [] },
             clones: clones || { clones: [] }
         };
+        
+        if (!validateTrafficData(trafficData)) {
+            throw new Error('Invalid data structure');
+        }
+        
+        return trafficData;
     } catch (error) {
         console.error(`Error loading traffic data for ${repoName}:`, error);
         return {
@@ -280,24 +288,37 @@ async function fetchTrafficData(repoName) {
 		}
 
 		// 4. Tüm depoları al (artık limit yok)
-		async function fetchAllRepos() {
-			try {
-				const baseUrl = window.location; // Otomatik olarak mevcut domain'i al
-				const response = await fetch(`${baseUrl}/data/repo-info.json`);
-				if (!response.ok) throw new Error('Repository list not found');
-				return await response.json();
-			} catch (error) {
-				console.error('Error loading repositories:', error);
-				showInfoBox();
-				return [];
-			}
-		}
+async function fetchAllRepos() {
+    try {
+        const baseUrl = window.location.origin;
+        const response = await fetch(`${baseUrl}/data/repo-info.json`);
+        if (!response.ok) throw new Error('Repository list not found');
+        const data = await response.json();
+        
+        // Eğer data doğrudan dizi değilse, repositories özelliğini kontrol et
+        return Array.isArray(data) ? { repositories: data } : data;
+    } catch (error) {
+        console.error('Error loading repositories:', error);
+        showInfoBox();
+        return { repositories: [] }; // Boş bir repositories dizisi döndür
+    }
+}
 
 		// 6. Grafik oluşturma
-		function createChart(canvasId, label, data, labels) {
-			const ctx = document.getElementById(canvasId);
-			if (!ctx) return;
-			
+function createChart(canvasId, label, data, labels) {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) {
+        console.error(`Canvas element with id ${canvasId} not found`);
+        return;
+    }
+    
+    // Veri kontrolü
+    if (!data || !labels || data.length === 0) {
+        ctx.parentElement.innerHTML = `<p>${translations[currentLang].noData}</p>`;
+        return;
+    }
+
+    try {			
 			new Chart(ctx.getContext('2d'), {
 				type: 'line',
 				data: {
@@ -326,7 +347,11 @@ async function fetchTrafficData(repoName) {
 					}
 				}
 			});
-		}
+    } catch (error) {
+        console.error(`Error creating chart for ${canvasId}:`, error);
+        ctx.parentElement.innerHTML = `<div class="error">${translations[currentLang].errorLoadingData}</div>`;
+    }
+}
 
 		// 7. Hata göster
 		function showError(messageKey) {
@@ -406,12 +431,26 @@ async function fetchTrafficData(repoName) {
 			
 			paginationDiv.style.display = 'flex';
 		}
+		
+// Veri yapısını doğrulamak için yardımcı fonksiyon
+function validateTrafficData(data) {
+    if (!data) return false;
+    if (data.views && !Array.isArray(data.views.views)) return false;
+    if (data.clones && !Array.isArray(data.clones.clones)) return false;
+    return true;
+}
 
 		// 10. Depoları görüntüle (sayfalandırmalı)
 async function displayRepos() {
+    // Eğer allRepos veya repositories yoksa hata göster
+    if (!allRepos || !allRepos.repositories) {
+        showError(translations[currentLang].errorLoadingRepos);
+        return;
+    }
+
     const startIdx = (currentPage - 1) * reposPerPage;
     const endIdx = startIdx + reposPerPage;
-    const reposToShow = allRepos.repositories.slice(startIdx, endIdx); // Dikkat: allRepos.repositories
+    const reposToShow = allRepos.repositories.slice(startIdx, endIdx);
     
     document.getElementById('charts-container').innerHTML = '';
     document.getElementById('loading').textContent = translations[currentLang].loadingRepos(0);
@@ -528,15 +567,15 @@ function createChart(canvasId, label, data, labels) {
 }
 
 		// 11. Ana işlem
-		async function main() {
-			updateTranslations();
+async function main() {
+    try {
+    updateTranslations();
     
-			// Kullanıcı doğrulama olmadan direkt repo listesini al
-			allRepos = await fetchAllRepos();
-			if (allRepos.length === 0) {
-				showInfoBox();
-				return;
-			}
+    allRepos = await fetchAllRepos();
+    if (!allRepos.repositories || allRepos.repositories.length === 0) {
+        showInfoBox();
+        return;
+    }
     
 			// Sayfalandırma ve görselleştirme
 			let currentPage = 1;
@@ -548,7 +587,13 @@ function createChart(canvasId, label, data, labels) {
 				currentPage = 1; // Sayfayı sıfırla
 				displayRepos();
 			});
-		}
+		
+    } catch (error) {
+        console.error('Main function error:', error);
+        showError(translations[currentLang].errorLoadingData);
+    }
+}
+
 			
 		// Sayfa yüklendiğinde dil butonlarını aktif hale getir
 		window.addEventListener('DOMContentLoaded', () => {
