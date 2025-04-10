@@ -226,24 +226,28 @@
 		let totalPages = 1;
 
 		// 2. Statik JSON'dan trafik verilerini oku
-		async function fetchTrafficData(repo) {
+		async function fetchTrafficData(repoName) {
 			try {
 				const [viewsRes, clonesRes] = await Promise.all([
-					fetch(`data/views.json`),
-					fetch(`data/clones.json`)
+					fetch(`data/repos/${repoName}/views.json`),
+					fetch(`data/repos/${repoName}/clones.json`)
 				]);
+        
+				if (!viewsRes.ok || !clonesRes.ok) throw new Error('Traffic data not found');
         
 				const views = await viewsRes.json();
 				const clones = await clonesRes.json();
         
-				// Repo filtresi ekleyin (action'da multi-repo desteği yoksa kaldırın)
 				return {
-					views: { views: views.views }, 
-					clones: { clones: clones.clones }
+					views: { views: views.views || [] },
+					clones: { clones: clones.clones || [] }
 				};
 			} catch (error) {
-				console.error('JSON okuma hatası:', error);
-				return { views: null, clones: null };
+				console.error(`Error loading traffic data for ${repoName}:`, error);
+				return {
+					views: { views: [] },
+					clones: { clones: [] }
+				};
 			}
 		}
 
@@ -255,14 +259,11 @@
 		// 4. Tüm depoları al (artık limit yok)
 		async function fetchAllRepos() {
 			try {
-				// Repo listesini static JSON'dan al
 				const response = await fetch('data/repo-info.json');
-				if (!response.ok) throw new Error('Depo listesi bulunamadı');
-        
-				const repos = await response.json();
-				return repos;
+				if (!response.ok) throw new Error('Repository list not found');
+				return await response.json();
 			} catch (error) {
-				showError(translations[currentLang].errorLoadingRepos);
+				console.error('Error loading repositories:', error);
 				return [];
 			}
 		}
