@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          fetch-depth: 0  # Important for git operations
+          fetch-depth: 0  # Get complete history
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -29,10 +29,18 @@ jobs:
           python -m pip install pygithub
           python -m pip install pyyaml
 
-      - name: Create data directories
+      - name: Pull latest changes
         run: |
-          mkdir -p docs/data/repos
-          echo "DATA_DIR=docs/data" >> $GITHUB_ENV  # Changed path
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git pull origin main
+
+      - name: Clean previous data
+        run: |
+          # Remove all existing data files
+          rm -rf docs/data/repos/*
+          rm -f docs/data/repo-info.json
+          echo "DATA_DIR=docs/data" >> $GITHUB_ENV
 
       - name: Collect traffic data
         env:
@@ -102,7 +110,7 @@ jobs:
                   except Exception as e:
                       print(f"❌ Error processing {repo.name}: {str(e)}")
               
-              # Save repository index in the correct location
+              # Save repository index
               with open(f"{data_dir}/repo-info.json", "w") as f:
                   json.dump(repo_index, f, indent=2)
               
@@ -118,5 +126,6 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add docs/data/
-          git commit -m "📊 Updated traffic data $(date '+%Y-%m-%d %H:%M')" || echo "No changes to commit"
-          git push
+          git commit -m "🔄 Completely refreshed traffic data $(date '+%Y-%m-%d %H:%M')" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main
