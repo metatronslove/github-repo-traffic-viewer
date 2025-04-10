@@ -228,16 +228,19 @@
 		// 2. Statik JSON'dan trafik verilerini oku
 		async function fetchTrafficData(repoName) {
 			try {
+				console.log(`Loading traffic data for ${repoName}...`);
 				const [viewsRes, clonesRes] = await Promise.all([
-					fetch(`data/repos/${repoName}/views.json`),
-					fetch(`data/repos/${repoName}/clones.json`)
+				fetch(`data/repos/${repoName}/views.json`),
+				fetch(`data/repos/${repoName}/clones.json`)
 				]);
-        
-				if (!viewsRes.ok || !clonesRes.ok) throw new Error('Traffic data not found');
-        
+    
+				if (!viewsRes.ok || !clonesRes.ok) {
+					console.error(`Traffic data not found for ${repoName}`);
+					throw new Error('Traffic data not found');
+				}
+    
 				const views = await viewsRes.json();
 				const clones = await clonesRes.json();
-        
 				return {
 					views: { views: views.views || [] },
 					clones: { clones: clones.clones || [] }
@@ -259,12 +262,18 @@
 		// 4. Tüm depoları al (artık limit yok)
 		async function fetchAllRepos() {
 			try {
-				const response = await fetch('data/repo-info.json'); // This path is correct
-				if (!response.ok) throw new Error('Repository list not found');
-				return await response.json();
+				console.log("Loading repository data...");
+				const response = await fetch('data/repo-info.json');
+				if (!response.ok) {
+					console.error("Failed to load repo-info.json", response.status);
+					throw new Error('Repository list not found');
+				}
+				const data = await response.json();
+				console.log(`Loaded ${data.length} repositories`);
+				return data;
 			} catch (error) {
 				console.error('Error loading repositories:', error);
-				showInfoBox(); // Show instructions if data isn't found
+				showInfoBox();
 				return [];
 			}
 		}
