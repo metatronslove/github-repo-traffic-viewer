@@ -158,6 +158,8 @@
 				nextPage: 'Next &raquo;'
 			}
 		};
+		translations.tr.errorLoadingRepos = "Depo listesi yüklenemedi";
+		translations.en.errorLoadingRepos = "Failed to load repository list";
 
 		let currentLang = localStorage.getItem('lang') || 'tr';
 		
@@ -223,49 +225,55 @@
 		let reposPerPage = 25;
 		let totalPages = 1;
 
-		async function fetchLocalTrafficData(type) {
+		// 2. Statik JSON'dan trafik verilerini oku
+		async function fetchTrafficData(repo) {
 			try {
-				const url = `./data/${type}.json`;
-				const response = await fetch(url);
-				if (!response.ok) throw new Error("Veri alınamadı");
-				return await response.json();
-			} catch (err) {
-				showError("Veri alınamadı: " + err.message);
-				return null;
+				const [viewsRes, clonesRes] = await Promise.all([
+					fetch(`data/views.json`),
+					fetch(`data/clones.json`)
+				]);
+        
+				const views = await viewsRes.json();
+				const clones = await clonesRes.json();
+        
+				// Repo filtresi ekleyin (action'da multi-repo desteği yoksa kaldırın)
+				return {
+					views: { views: views.views }, 
+					clones: { clones: clones.clones }
+				};
+			} catch (error) {
+				console.error('JSON okuma hatası:', error);
+				return { views: null, clones: null };
 			}
 		}
 
+		// 3. Kullanıcı bilgilerini al
+		async function fetchUserData() {
+			return { login: "auto-generated" }; // Sadece mock data
+		}
+
 		// 4. Tüm depoları al (artık limit yok)
-		async function fetchAllRepos(username) {
-			let repos = [];
-			let page = 1;
-			let hasMore = true;
-			
-			while (hasMore) {
-				document.getElementById('loading').textContent = translations[currentLang].loadingRepos(repos.length);
-				
-				const response = await githubApiRequest(
-					`https://api.github.com/users/${username}/repos?per_page=100&page=${page}`
-				);
-				
-				if (!response || response.length === 0) {
-					hasMore = false;
-				} else {
-					repos = repos.concat(response);
-					page++;
-					
-					// GitHub'ın rate limitini aşmamak için küçük bir bekleme
-					if (page % 5 === 0) await new Promise(resolve => setTimeout(resolve, 1000));
-				}
+		async function fetchAllRepos() {
+			try {
+				// Repo listesini static JSON'dan al
+				const response = await fetch('data/repos.json');
+				if (!response.ok) throw new Error('Depo listesi bulunamadı');
+        
+				const repos = await response.json();
+				return repos;
+			} catch (error) {
+				showError(translations[currentLang].errorLoadingRepos);
+				return [];
 			}
-			
-			return repos;
 		}
 
 		// 5. Tek bir depo için trafik verilerini al
 		async function fetchTrafficData(owner, repo) {
-			const views = await fetchLocalTrafficData("views");
-			const clones = await fetchLocalTrafficData("clones");
+			const [views, clones] = await Promise.all([
+				githubApiRequest(`https://api.github.com/repos/${owner}/${repo}/traffic/views`),
+				githubApiRequest(`https://api.github.com/repos/${owner}/${repo}/traffic/clones`)
+			]);
+			
 			return { views, clones };
 		}
 
@@ -380,7 +388,7 @@
 			document.getElementById('loading').textContent = translations[currentLang].loadingAuth;
 			
 			for (const repo of reposToShow) {
-				const trafficData = await fetchTrafficData(userData.login, repo.name);
+				const trafficData = await fetchTrafficData(repo.name);
 				if (!trafficData || !trafficData.views || !trafficData.clones) continue;
 
 				const container = document.createElement('div');
@@ -415,15 +423,20 @@
 		}
 
 		// 11. Ana işlem
-		let userData;
 		async function main() {
 			updateTranslations();
-			document.getElementById('info-container').innerHTML = `
-				<div class="info-box">
-					${translations[currentLang].infoBox}
-				</div>
-			`;
-			return;	
+    
+			// Kullanıcı doğrulama olmadan direkt repo listesini al
+			allRepos = await fetchAllRepos();
+			if (allRepos.length === 0) {
+				showInfoBox();
+				return;
+			}
+    
+			// Sayfalandırma ve görselleştirme
+			reposPerPage = parseInt(document.getElementById('per-page').value);
+			setupPagination(allRepos.length);
+			displayRepos();
 		}
 			
 		// Sayfa yüklendiğinde dil butonlarını aktif hale getir
