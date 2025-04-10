@@ -259,11 +259,12 @@
 		// 4. Tüm depoları al (artık limit yok)
 		async function fetchAllRepos() {
 			try {
-				const response = await fetch('data/repo-info.json');
+				const response = await fetch('data/repo-info.json'); // This path is correct
 				if (!response.ok) throw new Error('Repository list not found');
 				return await response.json();
 			} catch (error) {
 				console.error('Error loading repositories:', error);
+				showInfoBox(); // Show instructions if data isn't found
 				return [];
 			}
 		}
