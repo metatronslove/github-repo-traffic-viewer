@@ -2,15 +2,13 @@ name: GitHub Traffic Data Collector
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Her saat başı çalışır
-  workflow_dispatch:      # Manuel çalıştırma için
+    - cron: '0 * * * *'  # Runs every hour
+  workflow_dispatch:      # Manual trigger
 
 jobs:
   fetch-traffic-data:
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}  # Özel PAT kullanılıyor
-
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -23,12 +21,10 @@ jobs:
       - name: Get all repositories
         id: get-repos
         env:
-          GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}  # Moved here from job level
         run: |
-          # Debug: Token kontrolü
           echo "Token first 5 chars: ${GH_TOKEN:0:5}..."
-    
-          # API'den veri çekme
+          
           page=1
           all_repos=()
           while true; do
@@ -38,18 +34,15 @@ jobs:
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/user/repos?per_page=100&page=$page&type=all")
       
-            # HTTP durum kodunu ayır
             http_code=${response: -3}
             response_content=${response%???}
       
-            # Hata kontrolü
             if [ "$http_code" -ne 200 ]; then
               echo "API Error (HTTP $http_code):"
               echo "$response_content" | jq .
               exit 1
             fi
       
-            # JSON validasyonu
             if ! echo "$response_content" | jq -e 'type == "array"' >/dev/null; then
               echo "Invalid API response format:"
               echo "$response_content" > response_error.json
@@ -57,13 +50,11 @@ jobs:
               exit 1
             fi
       
-            # Repo isimlerini çıkart
             repos=$(echo "$response_content" | jq -r '.[].name? // empty')
             if [ -z "$repos" ]; then
-              break  # Başka repo yok
+              break
             fi
       
-            # Repoları diziye ekle
             while IFS= read -r repo; do
               all_repos+=("$repo")
             done <<< "$repos"
@@ -72,36 +63,37 @@ jobs:
             sleep 1
           done
     
-          # Repoları boşlukla ayrılmış string olarak kaydet
           echo "Found ${#all_repos[@]} repositories:"
           printf '%s\n' "${all_repos[@]}"
           echo "repos=${all_repos[*]}" >> $GITHUB_OUTPUT
           
       - name: Fetch traffic data
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}  # Added here too
         run: |
           for repo in ${{ steps.get-repos.outputs.repos }}; do
             echo "Processing $repo"
             
             mkdir -p "$REPOS_DIR/$repo"
             
-            # Görüntülenme verileri
             curl -s \
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/${{ github.repository_owner }}/$repo/traffic/views" \
               > "$REPOS_DIR/$repo/views.json"
             
-            # Klonlama verileri
             curl -s \
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/${{ github.repository_owner }}/$repo/traffic/clones" \
               > "$REPOS_DIR/$repo/clones.json"
             
-            sleep 1  # Rate limit koruması
+            sleep 1
           done
 
       - name: Generate repository index
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}  # Added here too
         run: |
           curl -s \
             -H "Authorization: Bearer $GH_TOKEN" \
