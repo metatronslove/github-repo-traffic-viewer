@@ -196,12 +196,7 @@ canvas {
 			if (document.getElementById('loading')) {
 				document.getElementById('loading').textContent = translations[currentLang].loadingAuth;
 			}
-    
-			// Bilgi kutusu
-			if (userData === null) {
-				showInfoBox();
-			}
-    
+			
 			// Pagination butonları
 			const pagination = document.getElementById('pagination');
 			if (pagination) {
@@ -220,11 +215,9 @@ canvas {
 			updateAllTranslations();
     
 			// Grafikleri ve verileri yenile
-			if (userData) {
-				document.getElementById('charts-container').innerHTML = '';
-				currentPage = 1;
-				displayRepos();
-			}
+			document.getElementById('charts-container').innerHTML = '';
+			currentPage = 1;
+			displayRepos();
     
 			// Buton durumlarını güncelle
 			document.querySelectorAll('.lang-btn').forEach(btn => {
