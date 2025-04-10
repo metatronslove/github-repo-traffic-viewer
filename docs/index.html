@@ -418,16 +418,12 @@
 		let userData;
 		async function main() {
 			updateTranslations();
-			
-			userData = await fetchUserData();
-			if (!userData) {
-				document.getElementById('info-container').innerHTML = `
-					<div class="info-box">
-						${translations[currentLang].infoBox}
-					</div>
-				`;
-				return;
-			}			
+			document.getElementById('info-container').innerHTML = `
+				<div class="info-box">
+					${translations[currentLang].infoBox}
+				</div>
+			`;
+			return;	
 		}
 			
 		// Sayfa yüklendiğinde dil butonlarını aktif hale getir
