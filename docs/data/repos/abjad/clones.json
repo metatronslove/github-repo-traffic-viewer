@@ -1,0 +1,21 @@
+{
+  "clones": [
+    {
+      "timestamp": "2025-03-29T00:00:00",
+      "count": 1,
+      "uniques": 1
+    },
+    {
+      "timestamp": "2025-04-02T00:00:00",
+      "count": 1,
+      "uniques": 1
+    },
+    {
+      "timestamp": "2025-04-05T00:00:00",
+      "count": 2,
+      "uniques": 2
+    }
+  ],
+  "count": 4,
+  "uniques": 4
+}

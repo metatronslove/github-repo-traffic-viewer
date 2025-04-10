@@ -1,110 +1,164 @@
 [
   {
-    "name": "abjad",
-    "full_name": "metatronslove/abjad",
-    "private": false,
-    "updated_at": "2025-03-11T00:06:59+00:00"
-  },
-  {
-    "name": "abjad-magic-square-checker",
-    "full_name": "metatronslove/abjad-magic-square-checker",
-    "private": false,
-    "updated_at": "2025-03-11T02:25:47+00:00"
-  },
-  {
     "name": "CPU-Only-Local-GPT-Neo-Test-Server-AI-GUI",
     "full_name": "metatronslove/CPU-Only-Local-GPT-Neo-Test-Server-AI-GUI",
     "private": false,
-    "updated_at": "2025-03-26T00:54:43+00:00"
-  },
-  {
-    "name": "cuma13",
-    "full_name": "metatronslove/cuma13",
-    "private": false,
-    "updated_at": "2025-03-11T00:04:54+00:00"
-  },
-  {
-    "name": "github-repo-traffic-viewer",
-    "full_name": "metatronslove/github-repo-traffic-viewer",
-    "private": false,
-    "updated_at": "2025-04-10T19:50:37+00:00"
+    "updated_at": "2025-03-26T00:54:43+00:00",
+    "last_updated": "2025-04-10T21:11:44Z",
+    "has_views": true,
+    "has_clones": true
   },
   {
     "name": "Ilce-isimleri-Numerolojik-Kayitlari",
     "full_name": "metatronslove/Ilce-isimleri-Numerolojik-Kayitlari",
     "private": false,
-    "updated_at": "2025-03-11T02:25:14+00:00"
-  },
-  {
-    "name": "isimler-ve-ebced-degerleri",
-    "full_name": "metatronslove/isimler-ve-ebced-degerleri",
-    "private": false,
-    "updated_at": "2025-03-11T02:25:45+00:00"
-  },
-  {
-    "name": "kilo-kontrol-kayitlari",
-    "full_name": "metatronslove/kilo-kontrol-kayitlari",
-    "private": false,
-    "updated_at": "2025-03-11T02:25:35+00:00"
+    "updated_at": "2025-03-11T02:25:14+00:00",
+    "last_updated": "2025-04-10T21:11:47Z",
+    "has_views": false,
+    "has_clones": true
   },
   {
     "name": "Letter-Count-Tool",
     "full_name": "metatronslove/Letter-Count-Tool",
     "private": false,
-    "updated_at": "2025-04-07T11:09:26+00:00"
-  },
-  {
-    "name": "local-previewer-html",
-    "full_name": "metatronslove/local-previewer-html",
-    "private": false,
-    "updated_at": "2025-03-18T05:59:06+00:00"
-  },
-  {
-    "name": "magic-square-generator",
-    "full_name": "metatronslove/magic-square-generator",
-    "private": false,
-    "updated_at": "2025-04-03T05:53:11+00:00"
-  },
-  {
-    "name": "occultabjadcalculator",
-    "full_name": "metatronslove/occultabjadcalculator",
-    "private": false,
-    "updated_at": "2025-03-30T10:33:46+00:00"
-  },
-  {
-    "name": "offline-downloader-script-and-gui",
-    "full_name": "metatronslove/offline-downloader-script-and-gui",
-    "private": false,
-    "updated_at": "2025-04-06T18:15:08+00:00"
-  },
-  {
-    "name": "okult-ebced-hesaplayici-cordova-android-app",
-    "full_name": "metatronslove/okult-ebced-hesaplayici-cordova-android-app",
-    "private": false,
-    "updated_at": "2025-03-30T10:33:52+00:00"
+    "updated_at": "2025-04-07T11:09:26+00:00",
+    "last_updated": "2025-04-10T21:11:51Z",
+    "has_views": false,
+    "has_clones": true
   },
   {
     "name": "Returned-Numerologic-Values-for-Turkish-Name-and-Surnames",
     "full_name": "metatronslove/Returned-Numerologic-Values-for-Turkish-Name-and-Surnames",
     "private": false,
-    "updated_at": "2025-03-11T02:25:38+00:00"
-  },
-  {
-    "name": "sihirli-kare-olusturucu-cordova-android-app",
-    "full_name": "metatronslove/sihirli-kare-olusturucu-cordova-android-app",
-    "private": false,
-    "updated_at": "2025-03-16T04:18:20+00:00"
-  },
-  {
-    "name": "telegram-abjad-bot",
-    "full_name": "metatronslove/telegram-abjad-bot",
-    "private": false,
-    "updated_at": "2023-09-11T01:01:08+00:00"
+    "updated_at": "2025-03-11T02:25:38+00:00",
+    "last_updated": "2025-04-10T21:11:58Z",
+    "has_views": false,
+    "has_clones": true
   },
   {
     "name": "Vanilla-JavaScript-Numerology-Calculator",
     "full_name": "metatronslove/Vanilla-JavaScript-Numerology-Calculator",
     "private": false,
-    "updated_at": "2025-04-09T05:55:23+00:00"
+    "updated_at": "2025-04-09T05:55:23+00:00",
+    "last_updated": "2025-04-10T21:12:02Z",
+    "has_views": true,
+    "has_clones": true
+  },
+  {
+    "name": "abjad",
+    "full_name": "metatronslove/abjad",
+    "private": false,
+    "updated_at": "2025-03-11T00:06:59+00:00",
+    "last_updated": "2025-04-10T21:11:41Z",
+    "has_views": true,
+    "has_clones": true
+  },
+  {
+    "name": "abjad-magic-square-checker",
+    "full_name": "metatronslove/abjad-magic-square-checker",
+    "private": false,
+    "updated_at": "2025-03-11T02:25:47+00:00",
+    "last_updated": "2025-04-10T21:11:43Z",
+    "has_views": false,
+    "has_clones": true
+  },
+  {
+    "name": "cuma13",
+    "full_name": "metatronslove/cuma13",
+    "private": false,
+    "updated_at": "2025-03-11T00:04:54+00:00",
+    "last_updated": "2025-04-10T21:11:45Z",
+    "has_views": false,
+    "has_clones": true
+  },
+  {
+    "name": "github-repo-traffic-viewer",
+    "full_name": "metatronslove/github-repo-traffic-viewer",
+    "private": false,
+    "updated_at": "2025-04-10T19:50:37+00:00",
+    "last_updated": "2025-04-10T21:11:46Z",
+    "has_views": true,
+    "has_clones": true
+  },
+  {
+    "name": "isimler-ve-ebced-degerleri",
+    "full_name": "metatronslove/isimler-ve-ebced-degerleri",
+    "private": false,
+    "updated_at": "2025-03-11T02:25:45+00:00",
+    "last_updated": "2025-04-10T21:11:48Z",
+    "has_views": true,
+    "has_clones": true
+  },
+  {
+    "name": "kilo-kontrol-kayitlari",
+    "full_name": "metatronslove/kilo-kontrol-kayitlari",
+    "private": false,
+    "updated_at": "2025-03-11T02:25:35+00:00",
+    "last_updated": "2025-04-10T21:11:50Z",
+    "has_views": false,
+    "has_clones": true
+  },
+  {
+    "name": "local-previewer-html",
+    "full_name": "metatronslove/local-previewer-html",
+    "private": false,
+    "updated_at": "2025-03-18T05:59:06+00:00",
+    "last_updated": "2025-04-10T21:11:52Z",
+    "has_views": true,
+    "has_clones": true
+  },
+  {
+    "name": "magic-square-generator",
+    "full_name": "metatronslove/magic-square-generator",
+    "private": false,
+    "updated_at": "2025-04-03T05:53:11+00:00",
+    "last_updated": "2025-04-10T21:11:53Z",
+    "has_views": false,
+    "has_clones": true
+  },
+  {
+    "name": "occultabjadcalculator",
+    "full_name": "metatronslove/occultabjadcalculator",
+    "private": false,
+    "updated_at": "2025-03-30T10:33:46+00:00",
+    "last_updated": "2025-04-10T21:11:54Z",
+    "has_views": true,
+    "has_clones": true
+  },
+  {
+    "name": "offline-downloader-script-and-gui",
+    "full_name": "metatronslove/offline-downloader-script-and-gui",
+    "private": false,
+    "updated_at": "2025-04-06T18:15:08+00:00",
+    "last_updated": "2025-04-10T21:11:56Z",
+    "has_views": true,
+    "has_clones": true
+  },
+  {
+    "name": "okult-ebced-hesaplayici-cordova-android-app",
+    "full_name": "metatronslove/okult-ebced-hesaplayici-cordova-android-app",
+    "private": false,
+    "updated_at": "2025-03-30T10:33:52+00:00",
+    "last_updated": "2025-04-10T21:11:57Z",
+    "has_views": false,
+    "has_clones": true
+  },
+  {
+    "name": "sihirli-kare-olusturucu-cordova-android-app",
+    "full_name": "metatronslove/sihirli-kare-olusturucu-cordova-android-app",
+    "private": false,
+    "updated_at": "2025-03-16T04:18:20+00:00",
+    "last_updated": "2025-04-10T21:11:59Z",
+    "has_views": false,
+    "has_clones": false
+  },
+  {
+    "name": "telegram-abjad-bot",
+    "full_name": "metatronslove/telegram-abjad-bot",
+    "private": false,
+    "updated_at": "2023-09-11T01:01:08+00:00",
+    "last_updated": "2025-04-10T21:12:00Z",
+    "has_views": false,
+    "has_clones": false
   }
 ]
