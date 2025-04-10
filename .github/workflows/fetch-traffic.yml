@@ -8,75 +8,61 @@ on:
 jobs:
   fetch-traffic-data:
     runs-on: ubuntu-latest
-    permissions:
-      actions: write
-      checks: write
-      deployments: write
-      contents: write
-      pull-requests: write
+    env:
+      GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}  # Özel PAT kullanılıyor
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up environment
+      - name: Setup directories
         run: |
           mkdir -p docs/data/repos
-          echo "DATA_DIR=docs/data" >> $GITHUB_ENV
           echo "REPOS_DIR=docs/data/repos" >> $GITHUB_ENV
 
-      - name: Get repository list
+      - name: Get all repositories
         id: get-repos
         run: |
-          # Tüm repoları al (sayfalandırmayı destekler)
+          # Tüm repoları al (sayfalandırma desteği ile)
           page=1
           all_repos=""
           while true; do
             echo "Fetching page $page"
             response=$(curl -s \
-              -H "Authorization: Bearer ${{ secrets.REPO_ACCESS_TOKEN }}" \
+              -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/user/repos?per_page=100&page=$page")
+              "https://api.github.com/user/repos?per_page=100&page=$page&type=all")
             
-            # Hata kontrolü
-            if echo "$response" | jq -e 'type == "array"' >/dev/null; then
-              repos=$(echo "$response" | jq -r '.[].name')
-              if [ -z "$repos" ]; then
-                break  # Başka repo yok
-              fi
-              all_repos="$all_repos $repos"
-              page=$((page+1))
-              sleep 1  # Rate limit koruması
-            else
-              echo "API Error:"
-              echo "$response" | jq .
-              exit 1
+            if echo "$response" | jq -e 'length == 0' >/dev/null; then
+              break  # Başka repo yok
             fi
+            
+            repos=$(echo "$response" | jq -r '.[].name')
+            all_repos="$all_repos $repos"
+            page=$((page+1))
+            sleep 1  # Rate limit koruması
           done
           
           echo "Found repositories:$all_repos"
           echo "repos=${all_repos}" >> $GITHUB_OUTPUT
 
-      - name: Fetch traffic data for each repository
+      - name: Fetch traffic data
         run: |
           for repo in ${{ steps.get-repos.outputs.repos }}; do
-            echo "Processing repository: $repo"
+            echo "Processing $repo"
             
-            # Klasör oluştur
             mkdir -p "$REPOS_DIR/$repo"
             
-            # Görüntüleme verileri
-            echo "Fetching views for $repo"
+            # Görüntülenme verileri
             curl -s \
-              -H "Authorization: Bearer ${{ secrets.REPO_ACCESS_TOKEN }}" \
+              -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/${{ github.repository_owner }}/$repo/traffic/views" \
               > "$REPOS_DIR/$repo/views.json"
             
             # Klonlama verileri
-            echo "Fetching clones for $repo"
             curl -s \
-              -H "Authorization: Bearer ${{ secrets.REPO_ACCESS_TOKEN }}" \
+              -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/${{ github.repository_owner }}/$repo/traffic/clones" \
               > "$REPOS_DIR/$repo/clones.json"
@@ -86,18 +72,17 @@ jobs:
 
       - name: Generate repository index
         run: |
-          # Tüm repoların temel bilgilerini kaydet
           curl -s \
-            -H "Authorization: Bearer ${{ secrets.REPO_ACCESS_TOKEN }}" \
+            -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/user/repos?per_page=100" \
             | jq '[.[] | {name: .name, full_name: .full_name, private: .private, updated_at: .updated_at}]' \
-            > "$DATA_DIR/repo-info.json"
+            > docs/data/repo-info.json
 
       - name: Commit and push changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add docs/data/
-          git commit -m "🔄 Update traffic data $(date '+%Y-%m-%d %H:%M')" || echo "No changes to commit"
+          git commit -m "🔄 Traffic data update $(date '+%Y-%m-%d %H:%M')" || echo "No changes to commit"
           git push
