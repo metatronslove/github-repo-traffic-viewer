@@ -44,6 +44,7 @@ jobs:
           import os
           import json
           import time
+          from datetime import datetime
 
           g = Github(os.environ['GH_TOKEN'])
           data_dir = os.environ['DATA_DIR']
@@ -68,45 +69,47 @@ jobs:
                           "updated_at": repo.updated_at.isoformat()
                       })
                       
-                      # Views data (always try to fetch)
+                      # Views data with new structure
                       try:
-                          views = repo.get_views_traffic()
+                          views_traffic = repo.get_views_traffic()
+                          views_data = {
+                              "views": [{
+                                  "timestamp": v.timestamp.isoformat(),
+                                  "count": v.count,
+                                  "uniques": v.uniques
+                              } for v in views_traffic["views"]],
+                              "count": views_traffic["count"],
+                              "uniques": views_traffic["uniques"]
+                          }
                           with open(f"{repo_dir}/views.json", "w") as f:
-                              json.dump({
-                                  "views": [{
-                                      "timestamp": v.timestamp.isoformat(),
-                                      "count": v.count,
-                                      "uniques": v.uniques
-                                  } for v in views['views']],
-                                  "count": views['count'],
-                                  "uniques": views['uniques']
-                              }, f)
+                              json.dump(views_data, f, indent=2)
                           print(f"✅ Saved views for {repo.name}")
                       except Exception as e:
                           print(f"⚠️ Couldn't get views for {repo.name}: {str(e)}")
                       
-                      # Clones data (retry if failed)
+                      # Clones data with new structure
                       max_retries = 3
                       for attempt in range(max_retries):
                           try:
-                              clones = repo.get_clones_traffic()
+                              clones_traffic = repo.get_clones_traffic()
+                              clones_data = {
+                                  "clones": [{
+                                      "timestamp": c.timestamp.isoformat(),
+                                      "count": c.count,
+                                      "uniques": c.uniques
+                                  } for c in clones_traffic["clones"]],
+                                  "count": clones_traffic["count"],
+                                  "uniques": clones_traffic["uniques"]
+                              }
                               with open(f"{repo_dir}/clones.json", "w") as f:
-                                  json.dump({
-                                      "clones": [{
-                                          "timestamp": c.timestamp.isoformat(),
-                                          "count": c.count,
-                                          "uniques": c.uniques
-                                      } for c in clones['clones']],
-                                      "count": clones['count'],
-                                      "uniques": clones['uniques']
-                                  }, f)
+                                  json.dump(clones_data, f, indent=2)
                               print(f"✅ Saved clones for {repo.name} (attempt {attempt + 1})")
                               break
                           except Exception as e:
                               if attempt == max_retries - 1:
                                   print(f"❌ Failed to get clones for {repo.name}: {str(e)}")
                               else:
-                                  time.sleep(2)  # Wait before retrying
+                                  time.sleep(2)
                       
                       time.sleep(2)  # Rate limit protection
                       
