@@ -2,8 +2,6 @@
 
 🚀 Kendi GitHub depo trafik istatistiklerinizi görüntülemek için kullanışlı bir araç
 
-![Örnek Görüntü](https://example.com/screenshot.jpg) <!-- Gerçek bir screenshot linki ekleyin -->
-
 ## Özellikler
 
 - Tüm depolarınız için trafik istatistikleri (views/clones)

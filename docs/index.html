@@ -223,31 +223,16 @@
 		let reposPerPage = 25;
 		let totalPages = 1;
 
-		// 2. GitHub API istek fonksiyonu
-		async function githubApiRequest(url) {
+		async function fetchLocalTrafficData(type) {
 			try {
-				const response = await fetch(url, {
-					credentials: 'include'
-				});
-				
-				if (response.status === 401) throw new Error('Lütfen GitHub\'da oturum açın');
-				if (response.status === 403) throw new Error('API limiti aşıldı, birkaç dakika sonra tekrar deneyin');
-				if (!response.ok) throw new Error('Veri alınamadı');
-				
+				const url = `./data/${type}.json`;
+				const response = await fetch(url);
+				if (!response.ok) throw new Error("Veri alınamadı");
 				return await response.json();
-			} catch (error) {
-				showError(error.message);
+			} catch (err) {
+				showError("Veri alınamadı: " + err.message);
 				return null;
 			}
-		}
-
-		// 3. Kullanıcı bilgilerini al
-		async function fetchUserData() {
-			const userData = await githubApiRequest('https://api.github.com/user');
-			if (!userData) return null;
-			
-			document.getElementById('loading').textContent = translations[currentLang].loadingAuth;
-			return userData;
 		}
 
 		// 4. Tüm depoları al (artık limit yok)
@@ -279,11 +264,8 @@
 
 		// 5. Tek bir depo için trafik verilerini al
 		async function fetchTrafficData(owner, repo) {
-			const [views, clones] = await Promise.all([
-				githubApiRequest(`https://api.github.com/repos/${owner}/${repo}/traffic/views`),
-				githubApiRequest(`https://api.github.com/repos/${owner}/${repo}/traffic/clones`)
-			]);
-			
+			const views = await fetchLocalTrafficData("views");
+			const clones = await fetchLocalTrafficData("clones");
 			return { views, clones };
 		}
 
