@@ -1,22 +1,40 @@
-name: GitHub Traffic Verisini Topla
+name: GitHub Traffic Verisini Topla ve Sayfaları Dağıt
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Her saat başı çalışır (değiştirilebilir)
+    - cron: '0 * * * *'  # Her saat başı çalışır
   workflow_dispatch:      # Manuel tetikleme
+  push:
+    branches: [main]     # Main branch'e push yapıldığında
 
 jobs:
-  fetch-traffic:
+  fetch-and-deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
-      metadata: read  # Repo listesi için gerekli
+      metadata: read
+      pages: write
+      id-token: write
+      actions: write  # Artefakt silmek için gerekli
 
     steps:
+      # 1. Repoyu klonla
       - name: Repo'yu klonla
         uses: actions/checkout@v3
 
+      # 2. Eski artefaktları temizle
+      - name: Eski github-pages artefaktlarını temizle
+        if: always()
+        run: |
+          # GitHub CLI ile eski artefaktları sil
+          gh api repos/${{ github.repository }}/actions/artifacts \
+            --jq '.artifacts[] | select(.name == "github-pages") | .id' \
+            | xargs -I{} gh api repos/${{ github.repository }}/actions/artifacts/{} -X DELETE
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 3. Trafik verilerini topla
       - name: Trafik verilerini al
         run: |
           mkdir -p docs/data
@@ -28,21 +46,33 @@ jobs:
                -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                https://api.github.com/repos/${{ github.repository }}/traffic/clones > docs/data/clones.json
 
-      - name: Repo listesini kaydet
-        run: |
-          mkdir -p docs/data
-          # Current repo bilgilerini al
           curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                https://api.github.com/repos/${{ github.repository }} > docs/data/repos.json
 
-      - name: Artefakt olarak yükle (timestamp ile)
-        uses: actions/upload-artifact@v3
-        with:
-          name: traffic-data-${{ github.run_id }}-${{ github.run_number }}
-          path: docs/data/
-          retention-days: 1  # 1 gün sakla (isteğe bağlı)
+      # 4. Siteyi oluştur (örnek - kendi build komutlarınızı ekleyin)
+      - name: Siteyi build et
+        run: |
+          mkdir -p build
+          echo "<html><body><h1>Site İçeriği</h1></body></html>" > build/index.html
+          cp -r docs/data build/data  # Trafik verilerini siteye ekle
 
-      - name: Değişiklikleri commitle
+      # 5. Artefaktı benzersiz isimle yükle
+      - name: Site artefaktını yükle
+        uses: actions/upload-pages-artifact@v2
+        with:
+          name: github-pages-${{ github.run_id }}  # Benzersiz isim
+          path: build/
+          retention-days: 1
+
+      # 6. GitHub Pages'e dağıt
+      - name: GitHub Pages'e dağıt
+        uses: actions/deploy-pages@v2
+        with:
+          artifact_name: github-pages-${{ github.run_id }}  # Yükleme adımıyla aynı isim
+          target_branch: gh-pages
+
+      # 7. Değişiklikleri commitle
+      - name: Verileri commitle
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
