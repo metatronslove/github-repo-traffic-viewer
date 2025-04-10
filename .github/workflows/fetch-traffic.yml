@@ -2,8 +2,8 @@ name: GitHub Traffic Data Collector
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Runs every hour
-  workflow_dispatch:      # Manual trigger
+    - cron: '0 * * * *'  # Runs hourly
+  workflow_dispatch:
 
 jobs:
   fetch-traffic-data:
@@ -11,101 +11,102 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup directories
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install pygithub
+          python -m pip install pyyaml
+
+      - name: Create data directories
         run: |
           mkdir -p docs/data/repos
-          echo "REPOS_DIR=docs/data/repos" >> $GITHUB_ENV
+          echo "DATA_DIR=docs/data/repos" >> $GITHUB_ENV
 
-      - name: Get all repositories
-        id: get-repos
+      - name: Collect traffic data
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Moved here from job level
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Token first 5 chars: ${GH_TOKEN:0:5}..."
-          
-          page=1
-          all_repos=()
-          while true; do
-            echo "Fetching page $page"
-            response=$(curl -s -w "%{http_code}" \
-              -H "Authorization: Bearer $GH_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/user/repos?per_page=100&page=$page&type=all")
-      
-            http_code=${response: -3}
-            response_content=${response%???}
-      
-            if [ "$http_code" -ne 200 ]; then
-              echo "API Error (HTTP $http_code):"
-              echo "$response_content" | jq .
-              exit 1
-            fi
-      
-            if ! echo "$response_content" | jq -e 'type == "array"' >/dev/null; then
-              echo "Invalid API response format:"
-              echo "$response_content" > response_error.json
-              cat response_error.json
-              exit 1
-            fi
-      
-            repos=$(echo "$response_content" | jq -r '.[].name? // empty')
-            if [ -z "$repos" ]; then
-              break
-            fi
-      
-            while IFS= read -r repo; do
-              all_repos+=("$repo")
-            done <<< "$repos"
-      
-            page=$((page+1))
-            sleep 1
-          done
-    
-          echo "Found ${#all_repos[@]} repositories:"
-          printf '%s\n' "${all_repos[@]}"
-          echo "repos=${all_repos[*]}" >> $GITHUB_OUTPUT
-          
-      - name: Fetch traffic data
-        env:
-          GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}  # Added here too
-        run: |
-          for repo in ${{ steps.get-repos.outputs.repos }}; do
-            echo "Processing $repo"
-            
-            mkdir -p "$REPOS_DIR/$repo"
-            
-            curl -s \
-              -H "Authorization: Bearer $GH_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/${{ github.repository_owner }}/$repo/traffic/views" \
-              > "$REPOS_DIR/$repo/views.json"
-            
-            curl -s \
-              -H "Authorization: Bearer $GH_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/${{ github.repository_owner }}/$repo/traffic/clones" \
-              > "$REPOS_DIR/$repo/clones.json"
-            
-            sleep 1
-          done
+          python - <<EOF
+          from github import Github
+          import os
+          import json
+          from datetime import datetime
 
-      - name: Generate repository index
-        env:
-          GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}  # Added here too
-        run: |
-          curl -s \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/user/repos?per_page=100" \
-            | jq '[.[] | {name: .name, full_name: .full_name, private: .private, updated_at: .updated_at}]' \
-            > docs/data/repo-info.json
+          g = Github(os.environ['GITHUB_TOKEN'])
+          data_dir = os.environ['DATA_DIR']
+          
+          # Get all repositories (only those accessible with current token)
+          repos = list(g.get_user().get_repos())
+          
+          # Prepare repository index for the HTML page
+          repo_index = []
+          
+          for repo in repos:
+              try:
+                  repo_dir = f"{data_dir}/{repo.name}"
+                  os.makedirs(repo_dir, exist_ok=True)
+                  
+                  # Save basic repo info for the index
+                  repo_index.append({
+                      "name": repo.name,
+                      "full_name": repo.full_name,
+                      "private": repo.private,
+                      "updated_at": repo.updated_at.isoformat()
+                  })
+                  
+                  # Get and save traffic data
+                  try:
+                      views = repo.get_views_traffic()
+                      clones = repo.get_clones_traffic()
+                      
+                      with open(f"{repo_dir}/views.json", "w") as f:
+                          json.dump({
+                              "views": [{
+                                  "timestamp": v.timestamp.isoformat(),
+                                  "count": v.count,
+                                  "uniques": v.uniques
+                              } for v in views['views']],
+                              "count": views['count'],
+                              "uniques": views['uniques']
+                          }, f)
+                      
+                      with open(f"{repo_dir}/clones.json", "w") as f:
+                          json.dump({
+                              "clones": [{
+                                  "timestamp": c.timestamp.isoformat(),
+                                  "count": c.count,
+                                  "uniques": c.uniques
+                              } for c in clones['clones']],
+                              "count": clones['count'],
+                              "uniques": clones['uniques']
+                          }, f)
+                      
+                  except Exception as e:
+                      print(f"⚠️ Couldn't get traffic for {repo.name}: {str(e)}")
+                  
+                  # Rate limit protection
+                  time.sleep(1)
+                  
+              except Exception as e:
+                  print(f"❌ Error processing {repo.name}: {str(e)}")
+          
+          # Save repository index (used by the HTML page)
+          with open(f"{data_dir}/repo-info.json", "w") as f:
+              json.dump(repo_index, f, indent=2)
+          
+          print(f"✅ Processed {len(repos)} repositories")
+          EOF
 
       - name: Commit and push changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add docs/data/
-          git commit -m "🔄 Traffic data update $(date '+%Y-%m-%d %H:%M')" || echo "No changes to commit"
+          git commit -m "📊 Updated traffic data $(date '+%Y-%m-%d %H:%M')" || echo "No changes to commit"
           git push
