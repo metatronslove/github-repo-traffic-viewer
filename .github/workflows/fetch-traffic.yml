@@ -1,87 +1,47 @@
-name: GitHub Traffic and Pages Deployment
+name: GitHub Traffic Data Collector
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Hourly
+    - cron: '0 * * * *'  # Her saat başı
   workflow_dispatch:
-  push:
-    branches: [main]
 
 jobs:
-  build-and-collect:
+  collect-traffic-data:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: write  # Sadece commit yetkisi
+      pull-requests: read
       metadata: read
-      pages: write
-      id-token: write
-      actions: write
 
     steps:
-      # 1. Checkout code
+      # 1. Repoyu klonla
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Clean previous artifacts
-      - name: Clean old artifacts
-        run: |
-          # Delete all artifacts named 'github-pages' or similar
-          gh api repos/${{ github.repository }}/actions/artifacts \
-            --jq '.artifacts[] | select(.name | startswith("github-pages")) | .id' \
-            | xargs -I{} gh api repos/${{ github.repository }}/actions/artifacts/{} -X DELETE
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # 3. Collect traffic data
-      - name: Collect GitHub traffic data
+      # 2. Trafik verilerini topla
+      - name: Fetch traffic data
         run: |
           mkdir -p docs/data
+          
+          # Views verisi
           curl -H "Accept: application/vnd.github+json" \
                -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                https://api.github.com/repos/${{ github.repository }}/traffic/views > docs/data/views.json
-
+          
+          # Clones verisi
           curl -H "Accept: application/vnd.github+json" \
                -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                https://api.github.com/repos/${{ github.repository }}/traffic/clones > docs/data/clones.json
-
+          
+          # Repo bilgisi
           curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-               https://api.github.com/repos/${{ github.repository }} > docs/data/repos.json
+               https://api.github.com/repos/${{ github.repository }} > docs/data/repo-info.json
 
-      # 4. Build site (customize with your actual build commands)
-      - name: Build website
+      # 3. Verileri commitle
+      - name: Commit collected data
         run: |
-          mkdir -p build
-          echo "<html><body><h1>My Website</h1></body></html>" > build/index.html
-          cp -r docs/data build/data
-
-      # 5. Upload artifact with UNIQUE name
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v2
-        with:
-          name: pages-${{ github.run_id }}-${{ github.run_attempt }}
-          path: build/
-          retention-days: 1
-
-      # 6. Commit traffic data
-      - name: Commit traffic data
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add docs/data/*.json
-          git commit -m "📊 Traffic data update [run ${{ github.run_number }}]" || echo "No changes to commit"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add docs/data/
+          git commit -m "📈 Traffic data update [$(date +'%Y-%m-%d %H:%M')]" || echo "No changes to commit"
           git push
-
-  deploy:
-    needs: build-and-collect
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-
-    steps:
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
-        with:
-          artifact_name: pages-${{ needs.build-and-collect.outputs.run_id }}-${{ needs.build-and-collect.outputs.run_attempt }}
-          environment_name: github-pages
