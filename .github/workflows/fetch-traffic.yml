@@ -9,8 +9,7 @@ jobs:
   fetch-traffic-data:
     runs-on: ubuntu-latest
     permissions:
-      actions: read
-      metadata: read
+      actions: write
       checks: write
       deployments: write
       contents: write
