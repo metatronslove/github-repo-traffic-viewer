@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>GitHub Depo Trafik Görüntüleyici</title>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<style>
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+			max-width: 900px;
+			margin: 0 auto;
+			padding: 20px;
+			color: #24292e;
+		}
+		h1 { color: #0366d6; }
+		.chart-box {
+			margin: 30px 0;
+			padding: 15px;
+			border: 1px solid #e1e4e8;
+			border-radius: 6px;
+		}
+		.info-box {
+			padding: 15px;
+			background-color: #f6f8fa;
+			border-radius: 6px;
+			margin-bottom: 20px;
+		}
+		#loading {
+			text-align: center;
+			padding: 20px;
+			font-style: italic;
+			color: #586069;
+		}
+		.error {
+			color: #cb2431;
+			background-color: #ffdce0;
+			padding: 10px;
+			border-radius: 6px;
+		}
+		.repo-name {
+			font-weight: 600;
+			color: #0366d6;
+		}
+		.pagination {
+			display: flex;
+			justify-content: center;
+			margin: 20px 0;
+			gap: 10px;
+		}
+		.pagination button {
+			padding: 5px 10px;
+			background: #f6f8fa;
+			border: 1px solid #e1e4e8;
+			border-radius: 6px;
+			cursor: pointer;
+		}
+		.pagination button.active {
+			background: #0366d6;
+			color: white;
+			border-color: #0366d6;
+		}
+		.per-page-selector {
+			margin: 10px 0;
+			text-align: center;
+		}
+				.language-switcher {
+			position: absolute;
+			top: 20px;
+			right: 20px;
+			display: flex;
+			gap: 5px;
+		}
+		.lang-btn {
+			padding: 3px 8px;
+			border: 1px solid #e1e4e8;
+			border-radius: 4px;
+			cursor: pointer;
+			background: #f6f8fa;
+		}
+		.lang-btn.active {
+			background: #0366d6;
+			color: white;
+		}
+	</style>
+</head>
+<body>	
+	<div class="language-switcher">
+		<button class="lang-btn" onclick="changeLanguage('tr')">TR</button>
+		<button class="lang-btn" onclick="changeLanguage('en')">EN</button>
+	</div>
+	
+	<h1 data-translate="title">GitHub Depo Trafik Verileri</h1>
+	<div id="info-container"></div>
+	<div id="loading">GitHub oturumunuz kontrol ediliyor...</div>
+	<div class="per-page-selector" id="per-page-container" style="display:none;">
+		<label>Sayfa başına depo sayısı:
+			<select id="per-page">
+				<option value="10">10</option>
+				<option value="25" selected>25</option>
+				<option value="50">50</option>
+				<option value="100">100</option>
+			</select>
+		</label>
+	</div>
+	<div id="charts-container"></div>
+	<div class="pagination" id="pagination" style="display:none;"></div>
+
+	<script>
+		// Dil çevirileri
+		const translations = {
+			tr: {
+				title: "GitHub Depo Trafik Verileri",
+				loadingAuth: "GitHub oturumunuz kontrol ediliyor...",
+				loadingRepos: (loaded) => `Depo listesi alınıyor (${loaded} yüklendi)...`,
+				totalRepos: (count) => `Toplam depo: ${count}`,
+				perPage: "Sayfa başına depo sayısı:",
+				pageStats: (current, total, count) => `Sayfa ${current}/${total} | Toplam ${count} depo`,
+				repoHeader: (name) => `<span class="repo-name">${name}</span> deposu`,
+				views: "Görüntülenmeler",
+				clones: "Klonlamalar",
+				errorAuth: "Lütfen GitHub'da oturum açın",
+				errorApiLimit: "API limiti aşıldı, birkaç dakika sonra tekrar deneyin",
+				infoBox: `
+					<h3>🚀 Kendi GitHub Trafik Verilerinizi Görün</h3>
+					<p>Bu sayfa sadece <strong>fork yapan kullanıcının</strong> kendi depo trafik verilerini gösterir.</p>
+					<ol>
+						<li>Sağ üstteki "Fork" butonuna basarak bu depoyu kendi hesabınıza kopyalayın</li>
+						<li>GitHub Pages ayarlarından <code>docs</code> klasörünü yayına alın</li>
+						<li>Oluşan sayfada <strong>kendi depo trafik verileriniz</strong> görünecektir</li>
+					</ol>
+				`,
+				previousPage: '&laquo; Önceki',
+				nextPage: 'Sonraki &raquo;'
+			},
+			en: {
+				title: "GitHub Repository Traffic Stats",
+				loadingAuth: "Checking GitHub session...",
+				loadingRepos: (loaded) => `Loading repository list (${loaded} loaded)...`,
+				totalRepos: (count) => `Total repositories: ${count}`,
+				perPage: "Repositories per page:",
+				pageStats: (current, total, count) => `Page ${current}/${total} | Total ${count} repos`,
+				repoHeader: (name) => `<span class="repo-name">${name}</span> repository`,
+				views: "Views",
+				clones: "Clones",
+				errorAuth: "Please log in to GitHub",
+				errorApiLimit: "API rate limit exceeded, try again later",
+				infoBox: `
+					<h3>🚀 View Your GitHub Traffic Stats</h3>
+					<p>This page shows traffic stats only for the <strong>forking user's</strong> repositories.</p>
+					<ol>
+						<li>Click "Fork" button to copy this repo to your account</li>
+						<li>Enable GitHub Pages for the <code>docs</code> folder</li>
+						<li>You'll see your own repository traffic stats</li>
+					</ol>
+				`,
+				previousPage: '&laquo; Previous',
+				nextPage: 'Next &raquo;'
+			}
+		};
+
+		let currentLang = localStorage.getItem('lang') || 'tr';
+		
+		// Tüm çevirileri güncelleyen fonksiyon
+		function updateAllTranslations() {
+			// Statik metinler
+			if (document.getElementById('[data-translate="title"]')) {
+				document.querySelector('[data-translate="title"]').textContent = translations[currentLang].title;
+			}
+			if (document.getElementById('#per-page-label')) {
+				document.querySelector('#per-page-label').textContent = translations[currentLang].perPage;
+			}
+    
+			// Dinamik içerikler
+			if (document.getElementById('loading')) {
+				document.getElementById('loading').textContent = translations[currentLang].loadingAuth;
+			}
+    
+			// Bilgi kutusu
+			if (userData === null) {
+				showInfoBox();
+			}
+    
+			// Pagination butonları
+			const pagination = document.getElementById('pagination');
+			if (pagination) {
+				const prevBtn = pagination.querySelector('button:first-child');
+				const nextBtn = pagination.querySelector('button:last-child');
+				if (prevBtn) prevBtn.innerHTML = translations[currentLang].previousPage;
+				if (nextBtn) nextBtn.innerHTML = translations[currentLang].nextPage;
+			}
+		}
+
+		function changeLanguage(lang) {
+			currentLang = lang;
+			localStorage.setItem('lang', lang);
+    
+			// Tüm çevirileri güncelle
+			updateAllTranslations();
+    
+			// Grafikleri ve verileri yenile
+			if (userData) {
+				document.getElementById('charts-container').innerHTML = '';
+				currentPage = 1;
+				displayRepos();
+			}
+    
+			// Buton durumlarını güncelle
+			document.querySelectorAll('.lang-btn').forEach(btn => {
+				btn.classList.toggle('active', btn.textContent === lang.toUpperCase());
+			});
+		}
+
+		// Tercümeleri güncelle
+		function updateTranslations() {
+			document.querySelector('[data-translate="title"]').textContent = translations[currentLang].title;
+			document.getElementById('per-page').previousSibling.textContent = translations[currentLang].perPage;
+		}
+		
+		// 1. Sayfalandırma değişkenleri
+		let allRepos = [];
+		let currentPage = 1;
+		let reposPerPage = 25;
+		let totalPages = 1;
+
+		// 2. GitHub API istek fonksiyonu
+		async function githubApiRequest(url) {
+			try {
+				const response = await fetch(url, {
+					credentials: 'include'
+				});
+				
+				if (response.status === 401) throw new Error('Lütfen GitHub\'da oturum açın');
+				if (response.status === 403) throw new Error('API limiti aşıldı, birkaç dakika sonra tekrar deneyin');
+				if (!response.ok) throw new Error('Veri alınamadı');
+				
+				return await response.json();
+			} catch (error) {
+				showError(error.message);
+				return null;
+			}
+		}
+
+		// 3. Kullanıcı bilgilerini al
+		async function fetchUserData() {
+			const userData = await githubApiRequest('https://api.github.com/user');
+			if (!userData) return null;
+			
+			document.getElementById('loading').textContent = translations[currentLang].loadingAuth;
+			return userData;
+		}
+
+		// 4. Tüm depoları al (artık limit yok)
+		async function fetchAllRepos(username) {
+			let repos = [];
+			let page = 1;
+			let hasMore = true;
+			
+			while (hasMore) {
+				document.getElementById('loading').textContent = translations[currentLang].loadingRepos(repos.length);
+				
+				const response = await githubApiRequest(
+					`https://api.github.com/users/${username}/repos?per_page=100&page=${page}`
+				);
+				
+				if (!response || response.length === 0) {
+					hasMore = false;
+				} else {
+					repos = repos.concat(response);
+					page++;
+					
+					// GitHub'ın rate limitini aşmamak için küçük bir bekleme
+					if (page % 5 === 0) await new Promise(resolve => setTimeout(resolve, 1000));
+				}
+			}
+			
+			return repos;
+		}
+
+		// 5. Tek bir depo için trafik verilerini al
+		async function fetchTrafficData(owner, repo) {
+			const [views, clones] = await Promise.all([
+				githubApiRequest(`https://api.github.com/repos/${owner}/${repo}/traffic/views`),
+				githubApiRequest(`https://api.github.com/repos/${owner}/${repo}/traffic/clones`)
+			]);
+			
+			return { views, clones };
+		}
+
+		// 6. Grafik oluşturma
+		function createChart(canvasId, label, data, labels) {
+			const ctx = document.getElementById(canvasId).getContext('2d');
+			new Chart(ctx, {
+				type: 'line',
+				data: {
+					labels: labels,
+					datasets: [{
+						label: label,
+						data: data,
+						borderColor: '#0366d6',
+						backgroundColor: 'rgba(3, 102, 214, 0.1)',
+						tension: 0.3
+					}]
+				},
+				options: {
+					responsive: true,
+					scales: { y: { beginAtZero: true } }
+				}
+			});
+		}
+
+		// 7. Hata göster
+		function showError(messageKey) {
+			const messages = {
+				'Lütfen GitHub\'da oturum açın': translations[currentLang].errorAuth,
+				'API limiti aşıldı, birkaç dakika sonra tekrar deneyin': translations[currentLang].errorApiLimit
+			};
+			const message = messages[messageKey] || messageKey;
+			
+			const container = document.getElementById('charts-container');
+			container.innerHTML = `<div class="error">${message}</div>`;
+		}
+
+		// 8. Bilgi kutusu göster (dil desteği ile)
+		function showInfoBox() {
+			const info = `
+				<div class="info-box">
+					${translations[currentLang].infoBox}
+				</div>
+			`;
+			document.getElementById('info-container').innerHTML = info;
+		}
+
+		// 9. Sayfalandırma kontrollerini oluştur
+		function setupPagination(totalRepos) {
+			totalPages = Math.ceil(totalRepos / reposPerPage);
+			const paginationDiv = document.getElementById('pagination');
+			paginationDiv.innerHTML = '';
+			
+			if (totalPages <= 1) return;
+			
+			// Önceki sayfa butonu
+			const prevButton = document.createElement('button');
+			prevButton.innerHTML = '&laquo; Önceki';
+			prevButton.disabled = currentPage === 1;
+			prevButton.addEventListener('click', () => {
+				if (currentPage > 1) {
+					currentPage--;
+					displayRepos();
+				}
+			});
+			paginationDiv.appendChild(prevButton);
+			
+			// Sayfa numaraları
+			const maxVisiblePages = 5;
+			let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+			let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+			
+			if (endPage - startPage + 1 < maxVisiblePages) {
+				startPage = Math.max(1, endPage - maxVisiblePages + 1);
+			}
+			
+			for (let i = startPage; i <= endPage; i++) {
+				const pageButton = document.createElement('button');
+				pageButton.textContent = i;
+				if (i === currentPage) {
+					pageButton.classList.add('active');
+				}
+				pageButton.addEventListener('click', () => {
+					currentPage = i;
+					displayRepos();
+				});
+				paginationDiv.appendChild(pageButton);
+			}
+			
+			// Sonraki sayfa butonu
+			const nextButton = document.createElement('button');
+			nextButton.innerHTML = 'Sonraki &raquo;';
+			nextButton.disabled = currentPage === totalPages;
+			nextButton.addEventListener('click', () => {
+				if (currentPage < totalPages) {
+					currentPage++;
+					displayRepos();
+				}
+			});
+			paginationDiv.appendChild(nextButton);
+			
+			paginationDiv.style.display = 'flex';
+		}
+
+		// 10. Depoları görüntüle (sayfalandırmalı)
+		async function displayRepos() {
+			const startIdx = (currentPage - 1) * reposPerPage;
+			const endIdx = startIdx + reposPerPage;
+			const reposToShow = allRepos.slice(startIdx, endIdx);
+			
+			document.getElementById('charts-container').innerHTML = '';
+			document.getElementById('loading').textContent = translations[currentLang].loadingAuth;
+			
+			for (const repo of reposToShow) {
+				const trafficData = await fetchTrafficData(userData.login, repo.name);
+				if (!trafficData || !trafficData.views || !trafficData.clones) continue;
+
+				const container = document.createElement('div');
+				container.className = 'chart-box';
+				container.innerHTML = `
+					<h3><span class="repo-name">${repo.name}</span> deposu</h3>
+					<div class="chart-row">
+						<canvas id="views-${repo.name}" height="150"></canvas>
+						<canvas id="clones-${repo.name}" height="150"></canvas>
+					</div>
+				`;
+				document.getElementById('charts-container').appendChild(container);
+
+				// Grafikleri oluştur
+				const viewsLabels = trafficData.views.views.map(v => v.timestamp.split('T')[0]);
+				const viewsData = trafficData.views.views.map(v => v.count);
+				createChart(`views-${repo.name}`, 'Görüntülenmeler', viewsData, viewsLabels);
+
+				const clonesLabels = trafficData.clones.clones.map(c => c.timestamp.split('T')[0]);
+				const clonesData = trafficData.clones.clones.map(c => c.count);
+				createChart(`clones-${repo.name}`, 'Klonlamalar', clonesData, clonesLabels);
+			}
+			
+			document.getElementById('loading').textContent = 
+				translations[currentLang].pageStats(currentPage, totalPages, allRepos.length);
+			
+			// Repo başlıklarını güncelle
+			document.querySelectorAll('.repo-name').forEach(element => {
+				const repoName = element.textContent;
+				element.parentElement.innerHTML = translations[currentLang].repoHeader(repoName);
+			});
+		}
+
+		// 11. Ana işlem
+		let userData;
+		async function main() {
+			updateTranslations();
+			
+			userData = await fetchUserData();
+			if (!userData) {
+				document.getElementById('info-container').innerHTML = `
+					<div class="info-box">
+						${translations[currentLang].infoBox}
+					</div>
+				`;
+				return;
+			}			
+		}
+			
+		// Sayfa yüklendiğinde dil butonlarını aktif hale getir
+		window.addEventListener('DOMContentLoaded', () => {
+			document.querySelectorAll('.lang-btn').forEach(btn => {
+				btn.classList.toggle('active', btn.textContent === currentLang.toUpperCase());
+			});
+			main();
+		});
+	</script>
+</body>
+</html>
