@@ -16,14 +16,38 @@
 1. **Bu depoyu fork layın**:
    - Sağ üstteki "Fork" butonuna tıklayarak kendi GitHub hesabınıza kopyalayın
 
-2. **GitHub Pages'i etkinleştirin**:
+2. **Personal Access Token (PAT) Oluşturun**:
+   - GitHub'da sağ üst köşedeki profil fotoğrafınıza tıklayın > "Settings" > "Developer settings" > "Personal access tokens" > "Tokens (classic)"
+   - "Generate new token" > "Generate new token (classic)" butonuna tıklayın
+   - Token için bir isim verin (örneğin "Repo Traffic Viewer")
+   - Aşağıdaki izinleri seçin:
+     - `repo` (tam kontrol)
+     - `workflow` (Actions çalıştırmak için)
+   - "Generate token" butonuna basın
+   - **Oluşturulan token'ı bir yere kaydedin**, çünkü sadece bir kez gösterilecek!
+
+3. **Token'ı Repository Secret olarak ekleyin**:
+   - Forkladığınız depoya gidin > "Settings" > "Secrets and variables" > "Actions"
+   - "New repository secret" butonuna tıklayın
+   - Name kısmına `PERSONAL_ACCESS_TOKEN` yazın
+   - Value kısmına oluşturduğunuz token'ı yapıştırın
+   - "Add secret" butonuna basın
+
+4. **GitHub Pages'i etkinleştirin**:
    - Forkladığınız depoda "Settings" > "Pages" sekmesine gidin
    - Source kısmından "Deploy from a branch" seçeneğini seçin
-   - Branch olarak "main" veya "master", folder olarak "/docs" seçin
+   - Branch olarak "main", folder olarak "/docs" seçin
    - Save butonuna basın
 
-3. **Sayfanız hazır!**:
+5. **Actions'ı manuel çalıştırın (ilk veri toplama için)**:
+   - Forkladığınız depoda "Actions" sekmesine gidin
+   - "GitHub Traffic Data Collector" workflow'unu seçin
+   - "Run workflow" butonuna basarak manuel çalıştırın
+   - Bu işlem ilk verilerin toplanmasını sağlayacak
+
+6. **Sayfanız hazır!**:
    - Birkaç dakika sonra `https://[KULLANICI-ADINIZ].github.io/github-repo-traffic-viewer/` adresinden erişebilirsiniz
+   - Veriler her saat başı otomatik güncellenecek
 
 ### 2. Yeni Dil Ekleme
 
@@ -53,6 +77,21 @@ es: {
 - **Yeni özellikler**: JavaScript kodunu (`script` etiketi içinde) düzenleyerek yeni grafikler ekleyebilirsiniz
 - **API entegrasyonları**: GitHub API'sini kullanarak yeni veriler ekleyebilirsiniz
 
+## Sık Sorulan Sorular
+
+### ❓ Veriler ne sıklıkla güncellenir?
+- Varsayılan olarak her saat başı güncellenir (`cron: '0 * * * *'`). 
+- `fetch-traffic.yml` dosyasını düzenleyerek sıklığı değiştirebilirsiniz.
+
+### ❓ Neden verileri göremiyorum?
+1. PAT (Personal Access Token) doğru izinlere sahip mi kontrol edin (`repo` ve `workflow`)
+2. Actions sekmesinde workflow'un başarıyla çalıştığından emin olun
+3. İlk çalıştırmada manuel olarak workflow'u tetiklediğinizden emin olun
+
+### ❓ Veriler nerede saklanıyor?
+- Tüm veriler `docs/data/` klasörü altında JSON formatında saklanır
+- Bu dosyalar GitHub'da public olarak görülebilir, ancak sadece sizin depolarınızın trafik verilerini içerir
+
 ## Neden Forklamalısınız?
 
 ✔️ **Gizlilik**: Kendi trafik verileriniz sadece sizin tarayıcınızda işlenir  
@@ -78,14 +117,6 @@ Bu proje MIT lisansı altında lisanslanmıştır - detaylar için [LICENSE](LIC
 
 **Not**: Bu araç sadece fork yapan kullanıcının kendi depolarının trafik verilerini gösterir. Başka kullanıcıların verilerini görüntülemez.
 
-## Önemli Noktalar
-
-1. **Adım adım fork talimatları** - GitHub'ı yeni kullanmaya başlayanlar için net yönergeler
-2. **Dil ekleme rehberi** - Kod içinde tam olarak nereye ekleneceği gösterilmiş
-3. **Görsel öğeler** - Screenshot alanı bırakılmış (gerçek bir görsel eklemelisiniz)
-4. **Katkı talimatları** - Başkalarının katkı yapmasını teşvik eden açık talimatlar
-5. **Nedenler bölümü** - Kullanıcıları fork yapmaya ikna eden net avantajlar
-
 ## 🎁 Destek Ol
 **Çalışmalarımın sürmesine olanak sağlamak için bağışta bulunabilirsiniz.**  
 *Lütfen bağış yapmadan önce en az iki kere düşünün çünkü geri ödemeler için ayıracak hiç zamanım ve imkanım yok.*  
@@ -98,5 +129,3 @@ Bu proje MIT lisansı altında lisanslanmıştır - detaylar için [LICENSE](LIC
 
 [![Papara ile Destekle](https://img.shields.io/badge/Bağış%20Yap-%E2%9D%A4-blue)](https://ppr.ist/1T9dx8tUT)
 [![Donate using Papara](https://img.shields.io/badge/Donate-%E2%9D%A4-blue)](https://ppr.ist/1T9dx8tUT)
-
-[![Papara ile Desteklen](1513592797QR.png)](https://ppr.ist/1T99dYF5X)
