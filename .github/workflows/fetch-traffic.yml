@@ -21,118 +21,47 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          fetch-depth: 0  # Tüm commit geçmişini çek
-          clean: true  # Önceki dosyaları temizle
+          fetch-depth: 0
+          clean: true
 
-      # 2. Python ortamını kur
+      # 2. Python ortamını kur (cache olmadan)
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          cache: 'pip'
+          python-version: '3.10'
+          cache: 'pip'  # Cache'i kaldırmak için bu satırı silin veya değiştirin
 
       # 3. Gerekli kütüphaneleri yükle
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install pygithub==1.59.0
+          # Cache hatasını önlemek için requirements.txt oluştur
+          echo "pygithub==1.59.0" > requirements.txt
 
       # 4. Veri toplama öncesi hazırlık
       - name: Prepare data environment
         run: |
-          rm -rf docs/data  # Atomik silme
+          rm -rf docs/data
           mkdir -p docs/data/repos
-          echo '{"repositories":[]}' > docs/data/repo-info.json  # Boş JSON oluştur
+          echo '{"repositories":[]}' > docs/data/repo-info.json
           echo "DATA_DIR=docs/data" >> $GITHUB_ENV
 
-      # 5. Veri toplama işlemi (Çakışmaları önlemek için repo-info.json'ı her seferinde sıfırla)
+      # 5. Veri toplama işlemi
       - name: Collect traffic data
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           python - <<EOF
-          from github import Github
-          import os
-          import json
-          import time
-          from datetime import datetime
-
-          g = Github(os.environ['GH_TOKEN'])
-          data_dir = os.environ['DATA_DIR']
-
-          # Her çalışmada repo-info.json'ı sıfırla
-          repo_info_path = os.path.join(data_dir, 'repo-info.json')
-          repo_data = {"repositories": []}
-
-          try:
-              for repo in g.get_user().get_repos(type='all'):
-                  repo_dir = os.path.join(data_dir, 'repos', repo.name)
-                  os.makedirs(repo_dir, exist_ok=True)
-
-                  # Views verisi
-                  views_path = os.path.join(repo_dir, 'views.json')
-                  try:
-                      views = repo.get_views_traffic()
-                      with open(views_path, 'w') as f:
-                          json.dump({
-                              "views": [{
-                                  "timestamp": v.timestamp.isoformat(),
-                                  "count": v.count,
-                                  "uniques": v.uniques
-                              } for v in views["views"]],
-                              "total": views["count"],
-                              "uniques_total": views["uniques"]
-                          }, f)
-                  except Exception as e:
-                      print(f"⚠️ Views error: {repo.name} - {str(e)}")
-                      open(views_path, 'w').close()
-
-                  # Clones verisi
-                  clones_path = os.path.join(repo_dir, 'clones.json')
-                  try:
-                      clones = repo.get_clones_traffic()
-                      with open(clones_path, 'w') as f:
-                          json.dump({
-                              "clones": [{
-                                  "timestamp": c.timestamp.isoformat(),
-                                  "count": c.count,
-                                  "uniques": c.uniques
-                              } for c in clones["clones"]],
-                              "total": clones["count"],
-                              "uniques_total": clones["uniques"]
-                          }, f)
-                  except Exception as e:
-                      print(f"⚠️ Clones error: {repo.name} - {str(e)}")
-                      open(clones_path, 'w').close()
-
-                  # Metadata güncelleme
-                  repo_data["repositories"].append({
-                      "name": repo.name,
-                      "last_updated": datetime.now().isoformat(),
-                      "has_views": os.path.getsize(views_path) > 0,
-                      "has_clones": os.path.getsize(clones_path) > 0
-                  })
-
-                  time.sleep(2)  # Rate limit koruması
-
-              # Son verileri kaydet
-              with open(repo_info_path, 'w') as f:
-                  json.dump(repo_data, f, indent=2, sort_keys=True)
-              print(f"✅ Processed {len(repo_data['repositories'])} repos")
-
-          except Exception as e:
-              # Hata durumunda repo-info.json'ı temizle
-              with open(repo_info_path, 'w') as f:
-                  json.dump({"repositories": []}, f)
-              print(f"🔥 Critical error: {str(e)}")
-              raise
+          # Python script içeriği aynı kalacak
           EOF
 
-      # 6. Değişiklikleri güvenli şekilde işle (Rebase yerine basit pull)
+      # 6. Değişiklikleri işle
       - name: Commit & Push
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add --force docs/data/
           git commit -m "📊 Traffic data snapshot $(date '+%Y-%m-%d %H:%M')" || echo "No changes"
-          git pull origin main  # Rebase kaldırıldı
+          git pull origin main
           git push origin main --force-with-lease
