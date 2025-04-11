@@ -659,9 +659,13 @@
                 return;
             }
 
-            // Get time range with fallback to '30d' if element not found
-            const timeRangeSelect = document.getElementById('time-range');
-            const selectedRange = timeRangeSelect ? timeRangeSelect.value : '30d';
+            // Safe way to get time range value with fallback
+            const getTimeRangeValue = () => {
+                const selector = document.getElementById('time-range');
+                return selector ? selector.value : '30d'; // Default to '30d' if not found
+            };
+
+            const selectedRange = getTimeRangeValue();
 
             const startIdx = (currentPage - 1) * reposPerPage;
             const endIdx = startIdx + reposPerPage;
@@ -670,11 +674,14 @@
             document.getElementById('charts-container').innerHTML = '';
             document.getElementById('loading').textContent = translations[currentLang].loadingRepos(0);
     
-            // Only show these if elements exist
-            const perPageContainer = document.getElementById('per-page-container');
-            const timeRangeContainer = document.getElementById('time-range-container');
-            if (perPageContainer) perPageContainer.style.display = 'block';
-            if (timeRangeContainer) timeRangeContainer.style.display = 'block';
+            // Safely show UI elements if they exist
+            const showElementIfExists = (id) => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'block';
+            };
+    
+            showElementIfExists('per-page-container');
+            showElementIfExists('time-range-container');
 
             let loadedCount = 0;
             for (const repo of reposToShow) {
@@ -682,7 +689,6 @@
                     translations[currentLang].loadingRepos(++loadedCount);
 
                 const trafficData = await fetchTrafficData(repo.name);
-                const selectedRange = document.getElementById('time-range').value;
 
                 const filteredViews = filterDataByDateRange(trafficData.views.views, selectedRange);
                 const filteredClones = filterDataByDateRange(trafficData.clones.clones, selectedRange);
@@ -738,49 +744,54 @@
             setupPagination(allRepos.repositories.length);
         }
 
-    async function main() {
-        try {
-            initTheme();
-            updateAllTranslations();
+        async function main() {
+            try {
+                initTheme();
+                updateAllTranslations();
             
-            allRepos = await fetchAllRepos();
-            if (!allRepos.repositories || allRepos.repositories.length === 0) {
-                showInfoBox();
-                return;
+                allRepos = await fetchAllRepos();
+                if (!allRepos.repositories || allRepos.repositories.length === 0) {
+                    showInfoBox();
+                    return;
+                }
+            
+                displayRepos();
+            } catch (error) {
+                console.error('Main function error:', error);
+                showError(translations[currentLang].errorLoadingData);
             }
-            
-            displayRepos();
-        } catch (error) {
-            console.error('Main function error:', error);
-            showError(translations[currentLang].errorLoadingData);
         }
-    }
 
-    // Başlatma
-    window.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.lang-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.textContent === currentLang.toUpperCase());
+        // Başlatma
+        window.addEventListener('DOMContentLoaded', () => {
+            // Initialize language buttons
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent === currentLang.toUpperCase());
+            });
+    
+            // Initialize time range selector
+            const timeRangeSelect = document.getElementById('time-range');
+            if (timeRangeSelect) {
+                timeRangeSelect.addEventListener('change', displayRepos);
+            } else {
+                console.warn('Time range selector not found');
+            }
+    
+            // Initialize per-page selector
+            const perPageSelect = document.getElementById('per-page');
+            if (perPageSelect) {
+                perPageSelect.addEventListener('change', (e) => {
+                    reposPerPage = parseInt(e.target.value) || 25;
+                    currentPage = 1;
+                    displayRepos();
+                });
+            } else {
+                console.warn('Per page selector not found');
+            }
+    
+            // Start the main application
+            main();
         });
-    
-        // Setup event listeners after DOM is loaded
-        const perPageSelect = document.getElementById('per-page');
-        if (perPageSelect) {
-            perPageSelect.addEventListener('change', (e) => {
-                reposPerPage = parseInt(e.target.value) || 25;
-                currentPage = 1;
-                displayRepos();
-            });
-        }
-    
-        const timeRangeSelect = document.getElementById('time-range');
-        if (timeRangeSelect) {
-            timeRangeSelect.addEventListener('change', function() {
-                displayRepos();
-            });
-        }
-    
-        main();
-    });
     </script>
     <center><p></p><p><img src="https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white" title="attributes are great">&nbsp;<img src="https://img.shields.io/badge/CSS3-1572B6?style=flat&logo=css3&logoColor=white" title="style is more than make up">&nbsp;<img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black" title="live Frenkanstein!"></p><p><a href="http://one.fanclub.rocks/" target="_blank" style="display: inline-flex; align-items: center; padding: 8px 16px; background: linear-gradient(135deg, #ff3366, #ff6633); color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 600; font-size: 15px; text-decoration: none; border-radius: 6px; box-shadow: 0 3px 6px rgba(0,0,0,0.16); transition: all 0.3s ease; letter-spacing: 0.5px;"><svg style="width: 16px; height: 16px; margin-right: 8px; fill: white;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm0 16H5V4h14v14zM7 6h10v2H7zm0 4h10v2H7zm0 4h7v2H7z"/></svg>One Blog</a><style>a:hover {transform: translateY(-2px);box-shadow: 0 5px 10px rgba(0,0,0,0.2);opacity: 0.9;}</style></p></center>
 </body>
