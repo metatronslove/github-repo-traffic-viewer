@@ -2,6 +2,8 @@
 
 🚀 Kendi GitHub depo trafik istatistiklerinizi görüntülemek için kullanışlı bir araç
 
+(https://github.com/metatronslove/github-repo-traffic-viewer/blob/main/docs/forklay%C4%B1n-diyorum-y%C3%BCkledi%C4%9Fimden-beri-bin-klon-s%C4%B1f%C4%B1r-fork.png?raw=true)
+
 ## Özellikler
 
 - Tüm depolarınız için trafik istatistikleri (views/clones)
