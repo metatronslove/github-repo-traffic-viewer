@@ -700,6 +700,16 @@
             };
     
             showElementIfExists('per-page-container');
+            // Initialize per-page selector
+            if (document.getElementById('per-page')) {
+                document.getElementById('per-page').addEventListener('change', (e) => {
+                    reposPerPage = parseInt(e.target.value) || 25;
+                    currentPage = 1;
+                    displayRepos();
+                });
+            } else {
+                console.warn('Per page selector not found');
+            }
             showElementIfExists('time-range-container');
 
             let loadedCount = 0;
@@ -797,9 +807,8 @@
             }
     
             // Initialize per-page selector
-            const perPageSelect = document.getElementById('per-page');
-            if (perPageSelect) {
-                perPageSelect.addEventListener('change', (e) => {
+            if (document.getElementById('per-page')) {
+                document.getElementById('per-page').addEventListener('change', (e) => {
                     reposPerPage = parseInt(e.target.value) || 25;
                     currentPage = 1;
                     displayRepos();
