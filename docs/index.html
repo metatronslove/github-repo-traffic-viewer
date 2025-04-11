@@ -690,7 +690,7 @@
             const startIdx = (currentPage - 1) * reposPerPage;
             const endIdx = startIdx + reposPerPage;
             const reposToShow = allRepos.repositories.slice(startIdx, endIdx);
-            const totalPages = Math.ceil(allRepos.length / document.getElementById('per-page').value);
+            const totalPages = Math.ceil(allRepos.repositories.length / document.getElementById('per-page').value);
 
             document.getElementById('charts-container').innerHTML = '';
             document.getElementById('loading').textContent = translations[currentLang].loadingRepos(0);
@@ -713,6 +713,12 @@
                 console.warn('Per page selector not found');
             }
             showElementIfExists('time-range-container');
+            // Initialize time range selector
+            if (document.getElementById('time-range')) {
+                document.getElementById('time-range').addEventListener('change', displayRepos);
+            } else {
+                console.warn('Time range selector not found');
+            }
 
             let loadedCount = 0;
             for (const repo of reposToShow) {
@@ -772,7 +778,7 @@
             document.getElementById('pagination').style.display = 'flex';
             document.getElementById('loading').textContent = 
                 translations[currentLang].pageStats(currentPage, totalPages, allRepos.repositories.length);
-            setupPagination(allRepos.repositories.length, document.getElementById('per-Page').value);
+            setupPagination(allRepos.repositories.length, document.getElementById('per-page').value);
         }
 
         async function main() {
@@ -801,9 +807,8 @@
             });
     
             // Initialize time range selector
-            const timeRangeSelect = document.getElementById('time-range');
-            if (timeRangeSelect) {
-                timeRangeSelect.addEventListener('change', displayRepos);
+            if (document.getElementById('time-range')) {
+                document.getElementById('time-range').addEventListener('change', displayRepos);
             } else {
                 console.warn('Time range selector not found');
             }
