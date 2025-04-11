@@ -525,7 +525,15 @@
             paginationDiv.style.display = 'flex';
         }
         
-        // 16. Depoları görüntüle (sayfalandırmalı)// 16. Depoları görüntüle (sayfalandırmalı)
+		// 16. YENİ VERİ FİLTRELEME FONKSİYONU
+        function filterDataByRange(data, rangeDays) {
+            if(rangeDays === 'all') return data;
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - parseInt(rangeDays));
+            return data.filter(item => new Date(item.timestamp) >= cutoffDate);
+        }
+        
+        // 17. Depoları görüntüle (sayfalandırmalı)// 16. Depoları görüntüle (sayfalandırmalı)
         async function displayRepos() {
             // Eğer allRepos veya repositories yoksa hata göster
             if (!allRepos || !allRepos.repositories) {
@@ -608,15 +616,7 @@
             setupPagination(allRepos.repositories.length);
         }
         
-        // 17. YENİ VERİ FİLTRELEME FONKSİYONU
-        function filterDataByRange(data, rangeDays) {
-            if(rangeDays === 'all') return data;
-            const cutoffDate = new Date();
-            cutoffDate.setDate(cutoffDate.getDate() - parseInt(rangeDays));
-            return data.filter(item => new Date(item.timestamp) >= cutoffDate);
-        }
-
-        // 17. Ana işlem
+        // 18. Ana işlem
         async function main() {
             try {
                 updateTranslations();
