@@ -20,7 +20,7 @@
    - GitHub'da sağ üst köşedeki profil fotoğrafınıza tıklayın > "Settings" > "Developer settings" > "Personal access tokens" > "Tokens (classic)"
    - "Generate new token" > "Generate new token (classic)" butonuna tıklayın
    - Token için bir isim verin (örneğin "Repo Traffic Viewer")
-   - Aşağıdaki izinleri seçin:
+   - Aşağıdaki izinleri seçin: (admin:repo_hook, read:org, repo)
      - `repo` (tam kontrol)
      - `workflow` (Actions çalıştırmak için)
    - "Generate token" butonuna basın
