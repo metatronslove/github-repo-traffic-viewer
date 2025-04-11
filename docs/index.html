@@ -659,14 +659,22 @@
                 return;
             }
 
+            // Get time range with fallback to '30d' if element not found
+            const timeRangeSelect = document.getElementById('time-range');
+            const selectedRange = timeRangeSelect ? timeRangeSelect.value : '30d';
+
             const startIdx = (currentPage - 1) * reposPerPage;
             const endIdx = startIdx + reposPerPage;
             const reposToShow = allRepos.repositories.slice(startIdx, endIdx);
 
             document.getElementById('charts-container').innerHTML = '';
             document.getElementById('loading').textContent = translations[currentLang].loadingRepos(0);
-            document.getElementById('per-page-container').style.display = 'block';
-            document.getElementById('time-range-container').style.display = 'block';
+    
+            // Only show these if elements exist
+            const perPageContainer = document.getElementById('per-page-container');
+            const timeRangeContainer = document.getElementById('time-range-container');
+            if (perPageContainer) perPageContainer.style.display = 'block';
+            if (timeRangeContainer) timeRangeContainer.style.display = 'block';
 
             let loadedCount = 0;
             for (const repo of reposToShow) {
@@ -753,7 +761,7 @@
         document.querySelectorAll('.lang-btn').forEach(btn => {
             btn.classList.toggle('active', btn.textContent === currentLang.toUpperCase());
         });
-        
+    
         // Setup event listeners after DOM is loaded
         const perPageSelect = document.getElementById('per-page');
         if (perPageSelect) {
@@ -763,14 +771,14 @@
                 displayRepos();
             });
         }
-        
+    
         const timeRangeSelect = document.getElementById('time-range');
         if (timeRangeSelect) {
             timeRangeSelect.addEventListener('change', function() {
                 displayRepos();
             });
         }
-        
+    
         main();
     });
     </script>
