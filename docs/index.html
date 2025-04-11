@@ -193,23 +193,24 @@
         <button class="lang-btn" onclick="toggleTheme()" style="margin-left: 10px;">
             <span data-theme-icon="dark">🌙</span>
             <span data-theme-icon="light">☀️</span>
-        </button>        
-        <div class="time-range-selector" id="time-range-container">
-            <label data-translate="timeRange">
-                Zaman Aralığı:
-                <select id="time-range">
-                    <option value="1d">Son 1 Gün</option>
-                    <option value="7d">Son 1 Hafta</option>
-                    <option value="30d" selected>Son 1 Ay</option>
-                    <option value="90d">Son 3 Ay</option>
-                    <option value="180d">Son 6 Ay</option>
-                    <option value="365d">Son 1 Yıl</option>
-                    <option value="all">Tüm Zamanlar</option>
-                </select>
-            </label>
-        </div>        
-    </div> 
-  
+        </button>
+    </div>
+    
+    <div class="time-range-selector" id="time-range-container">
+        <label data-translate="timeRange">
+            Zaman Aralığı:
+            <select id="time-range">
+                <option value="1d">Son 1 Gün</option>
+                <option value="7d">Son 1 Hafta</option>
+                <option value="30d" selected>Son 1 Ay</option>
+                <option value="90d">Son 3 Ay</option>
+                <option value="180d">Son 6 Ay</option>
+                <option value="365d">Son 1 Yıl</option>
+                <option value="all">Tüm Zamanlar</option>
+            </select>
+        </label>
+    </div>
+    
     <h1 data-translate="title">GitHub Depo Trafik Verileri</h1>
     <div id="info-container"></div>
     <div id="loading">GitHub oturumunuz kontrol ediliyor...</div>
