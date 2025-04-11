@@ -6,7 +6,17 @@
       "uniques": 1
     },
     {
+      "timestamp": "2025-03-29T00:00:00+00:00",
+      "count": 1,
+      "uniques": 1
+    },
+    {
       "timestamp": "2025-03-31T00:00:00",
+      "count": 1,
+      "uniques": 1
+    },
+    {
+      "timestamp": "2025-03-31T00:00:00+00:00",
       "count": 1,
       "uniques": 1
     },
@@ -16,11 +26,21 @@
       "uniques": 4
     },
     {
+      "timestamp": "2025-04-01T00:00:00+00:00",
+      "count": 4,
+      "uniques": 4
+    },
+    {
       "timestamp": "2025-04-10T00:00:00",
+      "count": 1,
+      "uniques": 1
+    },
+    {
+      "timestamp": "2025-04-10T00:00:00+00:00",
       "count": 1,
       "uniques": 1
     }
   ],
-  "count": 7,
-  "uniques": 7
+  "count": 14,
+  "uniques": 14
 }

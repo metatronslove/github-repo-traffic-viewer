@@ -6,11 +6,21 @@
       "uniques": 1
     },
     {
+      "timestamp": "2025-04-10T00:00:00+00:00",
+      "count": 559,
+      "uniques": 1
+    },
+    {
       "timestamp": "2025-04-11T00:00:00",
+      "count": 1,
+      "uniques": 1
+    },
+    {
+      "timestamp": "2025-04-11T00:00:00+00:00",
       "count": 1,
       "uniques": 1
     }
   ],
-  "count": 560,
-  "uniques": 2
+  "count": 1120,
+  "uniques": 4
 }
