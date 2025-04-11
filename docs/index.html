@@ -406,7 +406,7 @@
 			    if (data.length === 0) return data;
 			
 			    const dateMap = new Map();
-			    data.forEach(item => dateMap.set(item.timestamp.toISOString().split('T')[0], item));
+			    data.forEach(item => dateMap.set(item.timestamp.split('T')[0], item));
 			
 			    const sortedDates = [...dateMap.keys()].sort();
 			    const startDate = new Date(sortedDates[0]);
