@@ -429,61 +429,61 @@
         }
 
         // 12. Grafik oluşturma fonksiyonu
-        function createChart(canvasId, label, data, labels) {
-            const ctx = document.getElementById(canvasId);
-            if (!ctx) return;
-            
-            // Eğer veri yoksa grafik oluşturma
-            if (data.length === 0) {
-                ctx.parentElement.innerHTML = `<p>${translations[currentLang].noData}</p>`;
-                return;
-            }
+function createChart(canvasId, label, data, labels, total) {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+    
+    // Eğer veri yoksa grafik oluşturma
+    if (data.length === 0) {
+        ctx.parentElement.innerHTML = `<p>${translations[currentLang].noData}</p>`;
+        return;
+    }
 
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: `${label} (Toplam: ${total})`,
-                        data: data,
-                        borderColor: '#0366d6',
-                        backgroundColor: 'rgba(3, 102, 214, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        fill: true
-                    }]
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: `${label} (Toplam: ${total || 0})`,
+                data: data,
+                borderColor: '#0366d6',
+                backgroundColor: 'rgba(3, 102, 214, 0.1)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: { font: { size: 12 } }
+                }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Count'
+                    }
                 },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top',
-                            labels: { font: { size: 12 } }
-                        }
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
                     },
-                    scales: {
-                        y: { 
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Count'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Date'
-                            },
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45
-                            }
-                        }
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
                     }
                 }
-            });
+            }
         }
+    });
+}
 
         // 13. Hata göster
         function showError(messageKey) {
@@ -645,22 +645,23 @@ async function displayRepos() {
         document.getElementById('charts-container').appendChild(container);
 
         // Views grafiği
-        createChart(
-            `views-${repo.name}`,
-            translations[currentLang].views,
-            completeViews.map(v => v.count),
-            completeViews.map(v => formatDate(v.timestamp)),
-            trafficData.views.count
-        );
+// Views grafiği
+createChart(
+    `views-${repo.name}`,
+    translations[currentLang].views,
+    completeViews.map(v => v.count),
+    completeViews.map(v => formatDate(v.timestamp)),
+    trafficData.views.count
+);
 
-        // Clones grafiği
-        createChart(
-            `clones-${repo.name}`,
-            translations[currentLang].clones,
-            completeClones.map(c => c.count),
-            completeClones.map(c => formatDate(c.timestamp)),
-            trafficData.clones.count
-        );
+// Clones grafiği
+createChart(
+    `clones-${repo.name}`,
+    translations[currentLang].clones,
+    completeClones.map(c => c.count),
+    completeClones.map(c => formatDate(c.timestamp)),
+    trafficData.clones.count
+);
     }
 
     document.getElementById('pagination').style.display = 'flex';
@@ -685,8 +686,10 @@ async function displayRepos() {
                     reposPerPage = parseInt(e.target.value) || 25;
                     currentPage = 1; // Sayfayı sıfırla
                     displayRepos();
-                });
-                
+                });                
+                document.getElementById('timeRange').addEventListener('change', function() {
+					displayRepos();
+				});                
                 displayRepos();
             } catch (error) {
                 console.error('Main function error:', error);
@@ -700,10 +703,6 @@ async function displayRepos() {
                 btn.classList.toggle('active', btn.textContent === currentLang.toUpperCase());
             });
             main();
-        });
-        document.getElementById('timeRange').addEventListener('change', function() {
-            const selectedRange = this.value;
-            filterData(selectedRange); // Grafik verisini filtrele
         });
     </script>
 </body>
