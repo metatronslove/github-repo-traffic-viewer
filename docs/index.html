@@ -329,7 +329,7 @@
                 perPage: `Sayfa başına depo sayısı:
                     <select id="per-page">
                         <option value="10">10</option>
-                        <option value="25" selected>25</option>
+                        <option value="25">25</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
                     </select>            
@@ -355,7 +355,7 @@
                     <select id="time-range">
                         <option value="1d">Son 1 Gün</option>
                         <option value="7d">Son 1 Hafta</option>
-                        <option value="30d" selected>Son 1 Ay</option>
+                        <option value="30d">Son 1 Ay</option>
                         <option value="90d">Son 3 Ay</option>
                         <option value="180d">Son 6 Ay</option>
                         <option value="365d">Son 1 Yıl</option>
@@ -370,7 +370,7 @@
                 perPage: `Repositories per page:
                     <select id="per-page">
                         <option value="10">10</option>
-                        <option value="25" selected>25</option>
+                        <option value="25">25</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
                     </select>
@@ -396,7 +396,7 @@
                     <select id="time-range">
                         <option value="1d">Last Day</option>
                         <option value="7d">Last Week</option>
-                        <option value="30d" selected>Last Month</option>
+                        <option value="30d">Last Month</option>
                         <option value="90d">Last 3 Months</option>
                         <option value="180d">Last 6 Months</option>
                         <option value="365d">Last Year</option>
@@ -416,11 +416,21 @@
 
         function updateAllTranslations() {
             document.querySelector('[data-translate="title"]').textContent = translations[currentLang].title;
-            let TimeRangesPreviousValue = String(document.getElementById('time-range').value);
+            let TimeRangesPreviousValue = "";
+            if (document.getElementById('time-range').value) {
+				TimeRangesPreviousValue = String(document.getElementById('time-range').value);
+			} else {
+				TimeRangesPreviousValue = "30d";
+			}
             document.querySelector('[data-translate="timeRange"]').innerHTML = translations[currentLang].timeRange;
             EnableDisable('time-range', [], ['1d', '7d', '30d', '90d', '180d', '365d', 'all'], TimeRangesPreviousValue);
             EnableDisable('time-range', ['1d', '7d', '30d', '90d', '180d', '365d', 'all'], [], TimeRangesPreviousValue);
-            let PerPagePreviousValue = String(document.getElementById('per-page').value);
+            let PerPagePreviousValue = "";
+            if (document.getElementById('per-page').value) {
+				PerPagePreviousValue = String(document.getElementById('per-page').value);
+			} else {
+				PerPagePreviousValue = "25";
+			}
             document.querySelector('[data-translate="perPage"]').innerHTML = translations[currentLang].perPage;
             EnableDisable('per-page', [], ['10', '25', '50', '100'], PerPagePreviousValue);
             EnableDisable('per-page', ['10', '25', '50', '100'], [], PerPagePreviousValue);
