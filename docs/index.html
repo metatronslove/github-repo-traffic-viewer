@@ -376,7 +376,8 @@
 
         function updateAllTranslations() {
             document.querySelector('[data-translate="title"]').textContent = translations[currentLang].title;
-            document.querySelector('[data-translate="timeRange"]').textContent = translations[currentLang].timeRange;
+            document.querySelector('[data-translate="timeRange"]').innerHTML = translations[currentLang].timeRange;
+            document.querySelector('[data-translate="perPage"]').innerHTML = translations[currentLang].perPage;
             
             if (document.getElementById('loading')) {
                 document.getElementById('loading').textContent = translations[currentLang].loadingAuth;
