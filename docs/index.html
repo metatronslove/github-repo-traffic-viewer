@@ -417,7 +417,7 @@
         function updateAllTranslations() {
             document.querySelector('[data-translate="title"]').textContent = translations[currentLang].title;
             let TimeRangesPreviousValue = "";
-            if (document.getElementById('time-range').value) {
+            if (document.getElementById('time-range').value != "") {
 				TimeRangesPreviousValue = String(document.getElementById('time-range').value);
 			} else {
 				TimeRangesPreviousValue = "30d";
@@ -426,7 +426,7 @@
             EnableDisable('time-range', [], ['1d', '7d', '30d', '90d', '180d', '365d', 'all'], TimeRangesPreviousValue);
             EnableDisable('time-range', ['1d', '7d', '30d', '90d', '180d', '365d', 'all'], [], TimeRangesPreviousValue);
             let PerPagePreviousValue = "";
-            if (document.getElementById('per-page').value) {
+            if (document.getElementById('per-page').value != "") {
 				PerPagePreviousValue = String(document.getElementById('per-page').value);
 			} else {
 				PerPagePreviousValue = "25";
