@@ -52,15 +52,25 @@ jobs:
           data_dir = os.environ['DATA_DIR']
           
           def merge_data(existing, new, key):
-              existing_timestamps = {item['timestamp'] for item in existing[key]}
+              # Normalize timestamps by converting to datetime objects for comparison
+              existing_timestamps = set()
+              for item in existing[key]:
+                  ts = item['timestamp']
+                  if ts.endswith('+00:00'):
+                      ts = ts.replace('+00:00', 'Z')  # Convert to Zulu time format
+                  elif not (ts.endswith('Z') and 'T' in ts):
+                      # Handle naive datetime strings by adding Z
+                      ts = ts.replace('T', 'T') + 'Z'
+                  existing_timestamps.add(ts)
+              
               merged = existing[key] + [
                   {
-                      "timestamp": item.timestamp.astimezone(timezone.utc).isoformat(),
+                      "timestamp": item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
                       "count": item.count,
                       "uniques": item.uniques
                   } 
                   for item in new[key] 
-                  if item.timestamp.astimezone(timezone.utc).isoformat() not in existing_timestamps
+                  if item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ') not in existing_timestamps
               ]
               return sorted(merged, key=lambda x: x['timestamp'])
 
