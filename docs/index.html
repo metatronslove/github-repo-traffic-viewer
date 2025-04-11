@@ -314,7 +314,7 @@
             if (!(someselected != 0 || toselect == "")) {
                 const optionToSelect = selectElement.querySelector(`option[value='${toselect}']`);
                 if (optionToSelect) {
-                    optionToSelect.selected = true;
+                    optionToSelect.setAttribute('selected', 'selected');
                 }
             }
         }
