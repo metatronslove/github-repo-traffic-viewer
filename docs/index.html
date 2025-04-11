@@ -158,6 +158,24 @@
     <div id="charts-container"></div>
     <div class="pagination" id="pagination" style="display:none;"></div>
     <script>
+    document.getElementById('timeRange').addEventListener('change', function() {
+        const selectedRange = this.value;
+        filterData(selectedRange); // Grafik verisini filtrele
+    });
+
+        function filterData(range) {
+            const now = new Date();
+            let cutoffDate;
+
+            switch(range) {
+                case '1h': cutoffDate = new Date(now - 3600*1000); break;
+                case '7d': cutoffDate = new Date(now - 7*86400*1000); break;
+                case '30d': cutoffDate = new Date(now - 30*86400*1000); break;
+                default: cutoffDate = new Date(0); // Tüm veri
+            }
+            // Veriyi cutoffDate'e göre filtrele ve grafiği güncelle
+        }
+        
         // 1. Dil çevirileri
         const translations = {
             tr: {
@@ -387,6 +405,32 @@
                 month: 'short',
                 day: 'numeric'
             });
+        }
+        
+        function fillMissingDates(data, range) {
+            if (data.length === 0) return data;
+    
+            const dateMap = new Map();
+            data.forEach(item => dateMap.set(item.timestamp, item));
+    
+            const sortedDates = [...dateMap.keys()].sort();
+            const startDate = new Date(sortedDates[0]);
+            const endDate = new Date(sortedDates[sortedDates.length - 1]);
+    
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                const dateStr = d.toISOString().split('T')[0];
+                if (!dateMap.has(dateStr)) {
+                    dateMap.set(dateStr, {
+                        timestamp: dateStr,
+                        count: 0,
+                        uniques: 0
+                    });
+                }
+            }
+    
+            return [...dateMap.values()].sort((a, b) => 
+                new Date(a.timestamp) - new Date(b.timestamp)
+            );
         }
 
         // 12. Grafik oluşturma fonksiyonu
