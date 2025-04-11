@@ -526,14 +526,28 @@
         }
         
 		// 16. YENİ VERİ FİLTRELEME FONKSİYONU
-        function filterDataByRange(data, rangeDays) {
-            if(rangeDays === 'all') return data;
+		// filterDataByDateRange için alternatif
+        // function filterDataByRange(data, rangeDays) {
+        //    if(rangeDays === 'all') return data;
+        //    const cutoffDate = new Date();
+        //    cutoffDate.setDate(cutoffDate.getDate() - parseInt(rangeDays));
+        //    return data.filter(item => new Date(item.timestamp) >= cutoffDate);
+        //}      
+        
+        function filterDataByDateRange(data, range) {
+            if (range === 'all') return data;
+    
+            const days = parseInt(range) || 30;
             const cutoffDate = new Date();
-            cutoffDate.setDate(cutoffDate.getDate() - parseInt(rangeDays));
-            return data.filter(item => new Date(item.timestamp) >= cutoffDate);
+            cutoffDate.setDate(cutoffDate.getDate() - days);
+    
+            return data.filter(item => {
+                const itemDate = new Date(item.timestamp);
+                return itemDate >= cutoffDate;
+            });
         }
         
-        // 17. Depoları görüntüle (sayfalandırmalı)// 16. Depoları görüntüle (sayfalandırmalı)
+        // 17. Depoları görüntüle (sayfalandırmalı)
         async function displayRepos() {
             // Eğer allRepos veya repositories yoksa hata göster
             if (!allRepos || !allRepos.repositories) {
