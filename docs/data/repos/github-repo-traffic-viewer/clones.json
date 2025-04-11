@@ -7,10 +7,10 @@
     },
     {
       "timestamp": "2025-04-11T00:00:00",
-      "count": 1,
-      "uniques": 1
+      "count": 7,
+      "uniques": 6
     }
   ],
-  "count": 362,
-  "uniques": 96
+  "count": 368,
+  "uniques": 97
 }
