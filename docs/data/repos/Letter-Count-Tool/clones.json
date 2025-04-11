@@ -24,8 +24,13 @@
       "timestamp": "2025-04-11T00:00:00",
       "count": 2,
       "uniques": 2
+    },
+    {
+      "timestamp": "2025-04-11T00:00:00+00:00",
+      "count": 2,
+      "uniques": 2
     }
   ],
-  "count": 18,
-  "uniques": 16
+  "count": 20,
+  "uniques": 18
 }
