@@ -416,21 +416,11 @@
 
         function updateAllTranslations() {
             document.querySelector('[data-translate="title"]').textContent = translations[currentLang].title;
-            let TimeRangesPreviousValue = "";
-            if (document.getElementById('time-range').value != "30d") {
-				TimeRangesPreviousValue = String(document.getElementById('time-range').value);
-			} else {
-				TimeRangesPreviousValue = "30d";
-			}
+            let TimeRangesPreviousValue = String(document.getElementById('time-range').value);
             document.querySelector('[data-translate="timeRange"]').innerHTML = translations[currentLang].timeRange;
             EnableDisable('time-range', [], ['1d', '7d', '30d', '90d', '180d', '365d', 'all'], '');
             EnableDisable('time-range', ['1d', '7d', '30d', '90d', '180d', '365d', 'all'], [], TimeRangesPreviousValue);
-            let PerPagePreviousValue = "";
-            if (document.getElementById('per-page').value != "25") {
-				PerPagePreviousValue = String(document.getElementById('per-page').value);
-			} else {
-				PerPagePreviousValue = "25";
-			}
+            let PerPagePreviousValue = String(document.getElementById('per-page').value);
             document.querySelector('[data-translate="perPage"]').innerHTML = translations[currentLang].perPage;
             EnableDisable('per-page', [], ['10', '25', '50', '100'], '');
             EnableDisable('per-page', ['10', '25', '50', '100'], [], PerPagePreviousValue);
@@ -453,7 +443,6 @@
             localStorage.setItem('lang', lang);
             updateAllTranslations();
             document.getElementById('charts-container').innerHTML = '';
-            currentPage = 1;
             displayRepos();
             
             document.querySelectorAll('.lang-btn').forEach(btn => {
