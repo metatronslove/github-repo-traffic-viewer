@@ -410,7 +410,7 @@
         let allRepos = [];
         let currentPage = 1;
         let reposPerPage = 25;
-        let totalPages = 1;
+        let totalPages = Math.ceil(allRepos.length / reposPerPage);
 
         function getBasePath() {
             if (window.location.host.includes('github.io')) {
@@ -606,7 +606,7 @@
             document.getElementById('info-container').innerHTML = info;
         }
 
-        function setupPagination(totalRepos) {
+        function setupPagination(totalRepos, reposPerPage) {
             totalPages = Math.ceil(totalRepos / reposPerPage);
             const paginationDiv = document.getElementById('pagination');
             paginationDiv.innerHTML = '';
@@ -690,6 +690,7 @@
             const startIdx = (currentPage - 1) * reposPerPage;
             const endIdx = startIdx + reposPerPage;
             const reposToShow = allRepos.repositories.slice(startIdx, endIdx);
+            const totalPages = Math.ceil(allRepos.length / document.getElementById('per-page').value);
 
             document.getElementById('charts-container').innerHTML = '';
             document.getElementById('loading').textContent = translations[currentLang].loadingRepos(0);
@@ -771,7 +772,7 @@
             document.getElementById('pagination').style.display = 'flex';
             document.getElementById('loading').textContent = 
                 translations[currentLang].pageStats(currentPage, totalPages, allRepos.repositories.length);
-            setupPagination(allRepos.repositories.length);
+            setupPagination(allRepos.repositories.length, document.getElementById('per-Page').value);
         }
 
         async function main() {
