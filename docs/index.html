@@ -249,18 +249,21 @@
         }
 
         function updateChartColors() {
-            const charts = Chart.getRegistered();
             const textColor = getComputedStyle(document.body).getPropertyValue('--text-color');
             const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary-color');
 
-            charts.forEach(chart => {
-                chart.options.scales.x.ticks.color = textColor;
-                chart.options.scales.y.ticks.color = textColor;
-                chart.options.scales.x.grid.color = `${textColor}10`;
-                chart.options.scales.y.grid.color = `${textColor}20`;
-                chart.data.datasets[0].borderColor = primaryColor;
-                chart.data.datasets[0].backgroundColor = `${primaryColor}20`;
-                chart.update();
+            // Get all active charts from the Chart instances
+            Object.keys(Chart.instances).forEach(key => {
+                const chart = Chart.instances[key];
+                if (chart && !chart._destroyed) {
+                    chart.options.scales.x.ticks.color = textColor;
+                    chart.options.scales.y.ticks.color = textColor;
+                    chart.options.scales.x.grid.color = `${textColor}10`;
+                    chart.options.scales.y.grid.color = `${textColor}20`;
+                    chart.data.datasets[0].borderColor = primaryColor;
+                    chart.data.datasets[0].backgroundColor = `${primaryColor}20`;
+                    chart.update();
+                }
             });
         }
 
