@@ -379,9 +379,9 @@
             document.querySelector('[data-translate="title"]').textContent = translations[currentLang].title;
             let TimeRangesPreviousValue = String(document.getElementById('time-range').value);
             document.querySelector('[data-translate="timeRange"]').innerHTML = translations[currentLang].timeRange;
-            let choices = ['1d', '7d', '30d', '90d', '180d', '365d', 'all'];
+            let timeRangechoices = ['1d', '7d', '30d', '90d', '180d', '365d', 'all'];
             for (let d = 0; d < choices.length; d += 1) {
-                const option = selectElement.querySelector(`option[value='${choices[d]}']`);
+                const option = selectElement.querySelector(`option[value='${timeRangechoices[d]}']`);
                 if (option) {
                     if (option.hasAttribute('selected') || option.selected) {
                         option.removeAttribute('selected');
@@ -389,15 +389,15 @@
                     }
                 }
             }
-            let optionToSelect = selectElement.querySelector(`option[value='${TimeRangesPreviousValue}']`);
-            if (optionToSelect) {
-                optionToSelect.setAttribute('selected', 'selected');
+            let timeRangeoptionToSelect = selectElement.querySelector(`option[value='${TimeRangesPreviousValue}']`);
+            if (timeRangeoptionToSelect) {
+                timeRangeoptionToSelect.setAttribute('selected', 'selected');
             }
             let PerPagePreviousValue = String(document.getElementById('per-page').value);
             document.querySelector('[data-translate="perPage"]').innerHTML = translations[currentLang].perPage;
-            let choices = ['10', '25', '50', '100'];
+            let perPagechoices = ['10', '25', '50', '100'];
             for (let d = 0; d < choices.length; d += 1) {
-                const option = selectElement.querySelector(`option[value='${choices[d]}']`);
+                const option = selectElement.querySelector(`option[value='${perPagechoices[d]}']`);
                 if (option) {
                     if (option.hasAttribute('selected') || option.selected) {
                         option.removeAttribute('selected');
