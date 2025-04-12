@@ -381,7 +381,7 @@
             document.querySelector('[data-translate="timeRange"]').innerHTML = translations[currentLang].timeRange;
             let timeRangechoices = ['1d', '7d', '30d', '90d', '180d', '365d', 'all'];
             for (let d = 0; d < timeRangechoices.length; d += 1) {
-                const option = selectElement.querySelector(`option[value='${timeRangechoices[d]}']`);
+                const option = document.getElementById('time-range').querySelector(`option[value='${timeRangechoices[d]}']`);
                 if (option) {
                     if (option.hasAttribute('selected') || option.selected) {
                         option.removeAttribute('selected');
@@ -389,7 +389,7 @@
                     }
                 }
             }
-            let timeRangeoptionToSelect = selectElement.querySelector(`option[value='${TimeRangesPreviousValue}']`);
+            let timeRangeoptionToSelect = document.getElementById('time-range').querySelector(`option[value='${TimeRangesPreviousValue}']`);
             if (timeRangeoptionToSelect) {
                 timeRangeoptionToSelect.setAttribute('selected', 'selected');
             }
@@ -397,7 +397,7 @@
             document.querySelector('[data-translate="perPage"]').innerHTML = translations[currentLang].perPage;
             let perPagechoices = ['10', '25', '50', '100'];
             for (let d = 0; d < perPagechoices.length; d += 1) {
-                const option = selectElement.querySelector(`option[value='${perPagechoices[d]}']`);
+                const option = document.getElementById('per-page').querySelector(`option[value='${perPagechoices[d]}']`);
                 if (option) {
                     if (option.hasAttribute('selected') || option.selected) {
                         option.removeAttribute('selected');
@@ -405,7 +405,7 @@
                     }
                 }
             }
-            let optionToSelect = selectElement.querySelector(`option[value='${PerPagePreviousValue}']`);
+            let optionToSelect = document.getElementById('per-page').querySelector(`option[value='${PerPagePreviousValue}']`);
             if (optionToSelect) {
                 optionToSelect.setAttribute('selected', 'selected');
             }
