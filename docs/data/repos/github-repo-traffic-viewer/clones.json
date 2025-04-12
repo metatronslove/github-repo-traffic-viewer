@@ -9,8 +9,13 @@
       "timestamp": "2025-04-11T00:00:00Z",
       "count": 130,
       "uniques": 53
+    },
+    {
+      "timestamp": "2025-04-12T00:00:00Z",
+      "count": 18,
+      "uniques": 12
     }
   ],
-  "count": 491,
-  "uniques": 149
+  "count": 509,
+  "uniques": 161
 }
