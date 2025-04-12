@@ -68,11 +68,10 @@ function postProcessHtml(container) {
 		header.prepend(anchor);
 	});
 }
-
 function ToggleReadMe(repoName, fullName) {
 	const readmeContainer = document.getElementById(`readme-${repoName}`);
 	const toggleLinkText = document.getElementById('toggle-${repoName}');
-	if (radmeContainer.style.display === 'none') {
+	if (readmeContainer.style.display === 'none') {
 		readmeContainer.style.display = 'block';
 		toggleLinkText.textContent = 'README.md-';
 	} else {
