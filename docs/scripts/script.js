@@ -97,7 +97,7 @@ async function fetchAndDisplayReadme(repoName, fullName) {
               </div>
             `;
 		readmeContainer.innerHTML = modalHTML;
-		readmeContainer.style.display = 'block';
+		readmeContainer.style.display = 'none';
 		// Dinamik içerik yüklendikten sonra resimleri ve bağlantıları işle
 		processImagesAndLinks(readmeContainer, fullName);
 		if (typeof hljs !== 'undefined') {
@@ -116,7 +116,7 @@ async function fetchAndDisplayReadme(repoName, fullName) {
                   </div>
               </div>
             `;
-		readmeContainer.style.display = 'block';
+		readmeContainer.style.display = 'none';
 	}
 }
 // Göreceli URL'leri mutlak URL'lere dönüştür
