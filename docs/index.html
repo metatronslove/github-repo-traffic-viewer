@@ -279,45 +279,6 @@
                 }
             });
         }
-        
-        // This function scripted old style by me not AI generated way        
-        function EnableDisable(identity, toenable, todisable, toselect) {
-            let someselected = 0;
-            const selectElement = document.getElementById(identity);
-    
-            for (let e = 0; e < toenable.length; e += 1) {
-                const option = selectElement.querySelector(`option[value='${toenable[e]}']`);
-                if (option) {
-                    option.removeAttribute('disabled');
-                    if (option.selected) {
-                        someselected = 1;
-                    } else if (option.hasAttribute('selectedbefore')) {
-                        option.selected = true;
-                        option.removeAttribute('selectedbefore');
-                        someselected = 1;
-                    }
-                }
-            }
-    
-            for (let d = 0; d < todisable.length; d += 1) {
-                const option = selectElement.querySelector(`option[value='${todisable[d]}']`);
-                if (option) {
-                    if (option.hasAttribute('selected') || option.selected) {
-                        option.removeAttribute('selected');
-                        option.selected = false;
-                        option.setAttribute('selectedbefore', '');
-                    }
-                    option.setAttribute('disabled', 'disabled');
-                }
-            }
-    
-            if (!(someselected != 0 || toselect == "")) {
-                const optionToSelect = selectElement.querySelector(`option[value='${toselect}']`);
-                if (optionToSelect) {
-                    optionToSelect.setAttribute('selected', 'selected');
-                }
-            }
-        }
 
         // 2. Dil Yönetimi
         const translations = {
@@ -418,12 +379,36 @@
             document.querySelector('[data-translate="title"]').textContent = translations[currentLang].title;
             let TimeRangesPreviousValue = String(document.getElementById('time-range').value);
             document.querySelector('[data-translate="timeRange"]').innerHTML = translations[currentLang].timeRange;
-            EnableDisable('time-range', [], ['1d', '7d', '30d', '90d', '180d', '365d', 'all'], '');
-            EnableDisable('time-range', ['1d', '7d', '30d', '90d', '180d', '365d', 'all'], [], TimeRangesPreviousValue);
+            let choices = ['1d', '7d', '30d', '90d', '180d', '365d', 'all'];
+            for (let d = 0; d < choices.length; d += 1) {
+                const option = selectElement.querySelector(`option[value='${choices[d]}']`);
+                if (option) {
+                    if (option.hasAttribute('selected') || option.selected) {
+                        option.removeAttribute('selected');
+                        option.selected = false;
+                    }
+                }
+            }
+            let optionToSelect = selectElement.querySelector(`option[value='${TimeRangesPreviousValue}']`);
+            if (optionToSelect) {
+                optionToSelect.setAttribute('selected', 'selected');
+            }
             let PerPagePreviousValue = String(document.getElementById('per-page').value);
             document.querySelector('[data-translate="perPage"]').innerHTML = translations[currentLang].perPage;
-            EnableDisable('per-page', [], ['10', '25', '50', '100'], '');
-            EnableDisable('per-page', ['10', '25', '50', '100'], [], PerPagePreviousValue);
+            let choices = ['10', '25', '50', '100'];
+            for (let d = 0; d < choices.length; d += 1) {
+                const option = selectElement.querySelector(`option[value='${choices[d]}']`);
+                if (option) {
+                    if (option.hasAttribute('selected') || option.selected) {
+                        option.removeAttribute('selected');
+                        option.selected = false;
+                    }
+                }
+            }
+            let optionToSelect = selectElement.querySelector(`option[value='${PerPagePreviousValue}']`);
+            if (optionToSelect) {
+                optionToSelect.setAttribute('selected', 'selected');
+            }
             
             if (document.getElementById('loading')) {
                 document.getElementById('loading').textContent = translations[currentLang].loadingAuth;
