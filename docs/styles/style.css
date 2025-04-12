@@ -58,11 +58,13 @@
  a {
      color: var(--link-color);
      text-decoration: none;
+     cursor: pointer;
      transition: color 0.2s ease;
 }
  a:hover {
      color: var(--link-color-hover);
      text-decoration: none;
+     cursor: pointer;
 }
  .chart-box {
      margin: 30px 0;
