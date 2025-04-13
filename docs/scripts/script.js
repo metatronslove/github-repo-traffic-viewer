@@ -73,10 +73,10 @@ function ToggleReadMe(repoName, fullName) {
 	const toggleLinkText = document.getElementById('toggle-${repoName}');
 	if (readmeContainer.style.display === 'none') {
 		readmeContainer.style.display = 'block';
-		toggleLinkText.textContent = 'README.md-';
+		toggleLinkText.innerHTML = 'README.md-';
 	} else {
 		readmeContainer.style.display = 'none';
-		toggleLinkText.textContent = 'README.md+';
+		toggleLinkText.innerHTML = 'README.md+';
 	}
 }
 async function fetchAndDisplayReadme(repoName, fullName) {
