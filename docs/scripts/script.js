@@ -70,7 +70,7 @@ function postProcessHtml(container) {
 }
 function ToggleReadMe(repoName, fullName) {
 	const readmeContainer = document.getElementById(`readme-${repoName}`);
-	const toggleLinkText = document.getElementById('toggle-${repoName}');
+	const toggleLinkText = document.getElementById(`toggle-${repoName}`);
 	if (readmeContainer.style.display === 'none') {
 		readmeContainer.style.display = 'block';
 		toggleLinkText.innerHTML = 'README.md-';
