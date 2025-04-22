@@ -4,8 +4,13 @@
       "timestamp": "2025-04-21T00:00:00Z",
       "count": 2,
       "uniques": 1
+    },
+    {
+      "timestamp": "2025-04-22T00:00:00Z",
+      "count": 53,
+      "uniques": 1
     }
   ],
-  "count": 2,
-  "uniques": 1
+  "count": 55,
+  "uniques": 2
 }
