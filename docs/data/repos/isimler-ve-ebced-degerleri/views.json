@@ -124,8 +124,13 @@
       "timestamp": "2025-04-22T00:00:00Z",
       "count": 2,
       "uniques": 2
+    },
+    {
+      "timestamp": "2025-04-23T00:00:00Z",
+      "count": 2,
+      "uniques": 2
     }
   ],
-  "count": 208,
-  "uniques": 130
+  "count": 210,
+  "uniques": 132
 }
