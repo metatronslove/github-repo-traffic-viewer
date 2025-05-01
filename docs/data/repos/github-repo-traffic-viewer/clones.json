@@ -104,8 +104,13 @@
       "timestamp": "2025-04-30T00:00:00Z",
       "count": 14,
       "uniques": 11
+    },
+    {
+      "timestamp": "2025-05-01T00:00:00Z",
+      "count": 11,
+      "uniques": 8
     }
   ],
-  "count": 826,
-  "uniques": 302
+  "count": 837,
+  "uniques": 310
 }
