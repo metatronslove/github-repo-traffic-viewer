@@ -59,8 +59,13 @@
       "timestamp": "2025-05-05T00:00:00Z",
       "count": 42,
       "uniques": 1
+    },
+    {
+      "timestamp": "2025-05-06T00:00:00Z",
+      "count": 7,
+      "uniques": 1
     }
   ],
-  "count": 237,
-  "uniques": 12
+  "count": 244,
+  "uniques": 13
 }
