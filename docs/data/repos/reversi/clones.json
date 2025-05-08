@@ -16,11 +16,16 @@
       "uniques": 1
     },
     {
+      "timestamp": "2025-05-07T Above:00:00Z",
+      "count": 3,
+      "uniques": 3
+    },
+    {
       "timestamp": "2025-05-07T00:00:00Z",
       "count": 3,
       "uniques": 3
     }
   ],
-  "count": 12,
-  "uniques": 11
+  "count": 15,
+  "uniques": 14
 }
