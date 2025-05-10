@@ -222,7 +222,7 @@ const translations = {
                         <option value="25">25</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
-                    </select>            
+                    </select>
                         `,
 		pageStats: (current, total, count) => `Sayfa ${current}/${total} | Toplam ${count} depo`,
 		repoHeader: (name) => `<span class="repo-name">${name}</span> deposu`,
@@ -350,6 +350,24 @@ function updateAllTranslations() {
 	}
 }
 
+function mergeDuplicateDates(data) {
+  const merged = {};
+
+  data.forEach(item => {
+    const fixedTimestamp = fixTimestamp(item.timestamp);
+    const dateKey = fixedTimestamp.split('T')[0];
+
+    if (!merged[dateKey]) {
+      merged[dateKey] = { ...item, timestamp: fixedTimestamp };
+    } else {
+      merged[dateKey].count += item.count;
+      merged[dateKey].uniques += item.uniques;
+    }
+  });
+
+  return Object.values(merged);
+}
+
 function changeLanguage(lang) {
 	currentLang = lang;
 	localStorage.setItem('lang', lang);
@@ -373,6 +391,7 @@ function getBasePath() {
 	}
 	return '';
 }
+
 async function fetchTrafficData(repoName) {
 	try {
 		const basePath = getBasePath();
@@ -398,6 +417,10 @@ async function fetchTrafficData(repoName) {
 		}
 		const views = await viewsRes.json();
 		const clones = await clonesRes.json();
+
+		// YENİ EKLENEN KOD: Verileri birleştir ve işle
+		views.views = mergeDuplicateDates(views.views);
+		clones.clones = mergeDuplicateDates(clones.clones);
 		const trafficData = {
 			views: views || {
 				views: []
@@ -457,33 +480,62 @@ function validateTrafficData(data) {
 	return true;
 }
 
+function fixTimestamp(timestamp) {
+  // "Above" içeren tarihleri düzelt (örn: "2025-04-24T Above:00:00Z" -> "2025-04-24T00:00:00Z")
+  return timestamp.includes("Above")
+    ? timestamp.replace(" Above", "")
+    : timestamp;
+}
+
 function formatDate(isoString) {
-	const date = new Date(isoString);
-	return date.toLocaleDateString(currentLang, {
-		year: 'numeric',
-		month: 'short',
-		day: 'numeric'
-	});
+  try {
+    const fixedTimestamp = fixTimestamp(isoString);
+    const date = new Date(fixedTimestamp);
+    return date.toLocaleDateString(currentLang, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  } catch (e) {
+    console.error('Date formatting error:', e);
+    return 'Invalid Date';
+  }
 }
 
 function fillMissingDates(data, range) {
-	if (data.length === 0) return data;
-	const dateMap = new Map();
-	data.forEach(item => dateMap.set(item.timestamp.split('T')[0], item));
-	const sortedDates = [...dateMap.keys()].sort();
-	const startDate = new Date(sortedDates[0]);
-	const endDate = new Date(sortedDates[sortedDates.length - 1]);
-	for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-		const dateStr = d.toISOString().split('T')[0];
-		if (!dateMap.has(dateStr)) {
-			dateMap.set(dateStr, {
-				timestamp: dateStr,
-				count: 0,
-				uniques: 0
-			});
-		}
-	}
-	return [...dateMap.values()].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  if (data.length === 0) return data;
+
+  const dateMap = new Map();
+
+  // Tüm verileri işle (geçersiz tarihleri düzelt)
+  data.forEach(item => {
+    const fixedTimestamp = fixTimestamp(item.timestamp);
+    const dateKey = fixedTimestamp.split('T')[0];
+    dateMap.set(dateKey, {
+      ...item,
+      timestamp: fixedTimestamp // Düzeltilmiş tarihi kullan
+    });
+  });
+
+  const sortedDates = [...dateMap.keys()].sort();
+  const startDate = new Date(sortedDates[0]);
+  const endDate = new Date(sortedDates[sortedDates.length - 1]);
+
+  // Eksik tarihleri doldur
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    const dateStr = d.toISOString().split('T')[0];
+    if (!dateMap.has(dateStr)) {
+      dateMap.set(dateStr, {
+        timestamp: dateStr + "T00:00:00Z",
+        count: 0,
+        uniques: 0
+      });
+    }
+  }
+
+  return [...dateMap.values()].sort((a, b) =>
+    new Date(a.timestamp) - new Date(b.timestamp)
+  );
 }
 // 4. Grafik Yönetimi
 function createChart(canvasId, label, data, labels, total) {
@@ -612,14 +664,17 @@ function setupPagination(totalRepos, reposPerPage) {
 }
 
 function filterDataByDateRange(data, range) {
-	if (range === 'all') return data;
-	const days = parseInt(range) || 30;
-	const cutoffDate = new Date();
-	cutoffDate.setDate(cutoffDate.getDate() - days);
-	return data.filter(item => {
-		const itemDate = new Date(item.timestamp);
-		return itemDate >= cutoffDate;
-	});
+  if (range === 'all') return data;
+
+  const days = parseInt(range) || 30;
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - days);
+
+  return data.filter(item => {
+    const fixedTimestamp = fixTimestamp(item.timestamp);
+    const itemDate = new Date(fixedTimestamp);
+    return itemDate >= cutoffDate;
+  });
 }
 // 6. Ana İşlevler
 async function displayRepos() {
