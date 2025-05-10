@@ -682,17 +682,24 @@ function setupPagination(totalRepos, reposPerPage) {
 }
 
 function filterDataByDateRange(data, range) {
-  if (range === 'all') return data;
+    if (range === 'all') return data;
 
-  const days = parseInt(range) || 30;
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - days);
+    const days = parseInt(range) || 30;
+    const cutoffDate = new Date();
 
-  return data.filter(item => {
-    const fixedTimestamp = fixTimestamp(item.timestamp);
-    const itemDate = new Date(fixedTimestamp);
-    return itemDate >= cutoffDate;
-  });
+    // Zaman diliminden bağımsız kesin tarih hesaplama
+    cutoffDate.setUTCHours(0, 0, 0, 0); // Gün başlangıcına ayarla
+    cutoffDate.setUTCDate(cutoffDate.getUTCDate() - days);
+
+    return data.filter(item => {
+        if (!item || !item.timestamp) return false;
+
+        const fixedTimestamp = fixTimestamp(item.timestamp);
+        const itemDate = new Date(fixedTimestamp);
+        itemDate.setUTCHours(0, 0, 0, 0); // Karşılaştırmayı gün bazında yap
+
+        return itemDate >= cutoffDate;
+    });
 }
 // 6. Ana İşlevler
 async function displayRepos() {
