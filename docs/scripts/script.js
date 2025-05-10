@@ -302,12 +302,12 @@ translations.tr.noData = "Veri bulunamadı";
 translations.en.noData = "No data available";
 translations.tr.errorLoadingData = "Veri yüklenirken hata oluştu";
 translations.en.errorLoadingData = "Error loading data";
-let currentLang = localStorage.getItem('lang') || 'tr';
+let lang = localStorage.getItem('lang') || 'tr';
 
 function updateAllTranslations() {
-	document.querySelector('[data-translate="title"]').textContent = translations[currentLang].title;
+	document.querySelector('[data-translate="title"]').textContent = translations[lang].title;
 	let TimeRangesPreviousValue = String(document.getElementById('time-range').value);
-	document.querySelector('[data-translate="timeRange"]').innerHTML = translations[currentLang].timeRange;
+	document.querySelector('[data-translate="timeRange"]').innerHTML = translations[lang].timeRange;
 	let timeRangechoices = ['1d', '7d', '30d', '90d', '180d', '365d', 'all'];
 	for (let d = 0; d < timeRangechoices.length; d += 1) {
 		const option = document.getElementById('time-range').querySelector(`option[value='${timeRangechoices[d]}']`);
@@ -323,7 +323,7 @@ function updateAllTranslations() {
 		timeRangeoptionToSelect.setAttribute('selected', 'selected');
 	}
 	let PerPagePreviousValue = String(document.getElementById('per-page').value);
-	document.querySelector('[data-translate="perPage"]').innerHTML = translations[currentLang].perPage;
+	document.querySelector('[data-translate="perPage"]').innerHTML = translations[lang].perPage;
 	let perPagechoices = ['10', '25', '50', '100'];
 	for (let d = 0; d < perPagechoices.length; d += 1) {
 		const option = document.getElementById('per-page').querySelector(`option[value='${perPagechoices[d]}']`);
@@ -339,14 +339,14 @@ function updateAllTranslations() {
 		optionToSelect.setAttribute('selected', 'selected');
 	}
 	if (document.getElementById('loading')) {
-		document.getElementById('loading').textContent = translations[currentLang].loadingAuth;
+		document.getElementById('loading').textContent = translations[lang].loadingAuth;
 	}
 	const pagination = document.getElementById('pagination');
 	if (pagination) {
 		const prevBtn = pagination.querySelector('button:first-child');
 		const nextBtn = pagination.querySelector('button:last-child');
-		if (prevBtn) prevBtn.innerHTML = translations[currentLang].previousPage;
-		if (nextBtn) nextBtn.innerHTML = translations[currentLang].nextPage;
+		if (prevBtn) prevBtn.innerHTML = translations[lang].previousPage;
+		if (nextBtn) nextBtn.innerHTML = translations[lang].nextPage;
 	}
 }
 
@@ -369,7 +369,7 @@ function mergeDuplicateDates(data) {
 }
 
 function changeLanguage(lang) {
-	currentLang = lang;
+	lang = lang;
 	localStorage.setItem('lang', lang);
 	updateAllTranslations();
 	document.getElementById('charts-container').innerHTML = '';
@@ -503,7 +503,7 @@ function safeDateParse(timestamp) {
 function formatDate(isoString) {
   try {
     const date = safeDateParse(isoString);
-    return date.toLocaleDateString(currentLang, {
+    return date.toLocaleDateString(lang, {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -560,7 +560,7 @@ function createChart(canvasId, label, data, labels, total) {
 	const ctx = document.getElementById(canvasId);
 	if (!ctx) return;
 	if (data.length === 0) {
-		ctx.parentElement.innerHTML = `<p>${translations[currentLang].noData}</p>`;
+		ctx.parentElement.innerHTML = `<p>${translations[lang].noData}</p>`;
 		return;
 	}
 	const textColor = getComputedStyle(document.body).getPropertyValue('--text-color');
@@ -618,8 +618,8 @@ function createChart(canvasId, label, data, labels, total) {
 // 5. UI Yönetimi
 function showError(messageKey) {
 	const messages = {
-		'Lütfen GitHub\'da oturum açın': translations[currentLang].errorAuth,
-		'API limiti aşıldı, birkaç dakika sonra tekrar deneyin': translations[currentLang].errorApiLimit
+		'Lütfen GitHub\'da oturum açın': translations[lang].errorAuth,
+		'API limiti aşıldı, birkaç dakika sonra tekrar deneyin': translations[lang].errorApiLimit
 	};
 	const message = messages[messageKey] || messageKey;
 	const container = document.getElementById('charts-container');
@@ -629,7 +629,7 @@ function showError(messageKey) {
 function showInfoBox() {
 	const info = `
                 <div class="info-box">
-                    ${translations[currentLang].infoBox}
+                    ${translations[lang].infoBox}
                 </div>
             `;
 	document.getElementById('info-container').innerHTML = info;
@@ -641,7 +641,7 @@ function setupPagination(totalRepos, reposPerPage) {
 	paginationDiv.innerHTML = '';
 	if (totalPages <= 1) return;
 	const prevButton = document.createElement('button');
-	prevButton.innerHTML = translations[currentLang].previousPage;
+	prevButton.innerHTML = translations[lang].previousPage;
 	prevButton.disabled = currentPage === 1;
 	prevButton.addEventListener('click', () => {
 		if (currentPage > 1) {
@@ -669,7 +669,7 @@ function setupPagination(totalRepos, reposPerPage) {
 		paginationDiv.appendChild(pageButton);
 	}
 	const nextButton = document.createElement('button');
-	nextButton.innerHTML = translations[currentLang].nextPage;
+	nextButton.innerHTML = translations[lang].nextPage;
 	nextButton.disabled = currentPage === totalPages;
 	nextButton.addEventListener('click', () => {
 		if (currentPage < totalPages) {
@@ -697,7 +697,7 @@ function filterDataByDateRange(data, range) {
 // 6. Ana İşlevler
 async function displayRepos() {
 	if (!allRepos || !allRepos.repositories) {
-		showError(translations[currentLang].errorLoadingRepos);
+		showError(translations[lang].errorLoadingRepos);
 		return;
 	}
 	// Safe way to get time range value with fallback
@@ -711,7 +711,7 @@ async function displayRepos() {
 	const reposToShow = allRepos.repositories.slice(startIdx, endIdx);
 	const totalPages = Math.ceil(allRepos.repositories.length / document.getElementById('per-page').value);
 	document.getElementById('charts-container').innerHTML = '';
-	document.getElementById('loading').textContent = translations[currentLang].loadingRepos(0);
+	document.getElementById('loading').textContent = translations[lang].loadingRepos(0);
 	// Safely show UI elements if they exist
 	const showElementIfExists = (id) => {
 		const el = document.getElementById(id);
@@ -737,7 +737,7 @@ async function displayRepos() {
 	}
 	let loadedCount = 0;
 	for (const repo of reposToShow) {
-		document.getElementById('loading').textContent = translations[currentLang].loadingRepos(++loadedCount);
+		document.getElementById('loading').textContent = translations[lang].loadingRepos(++loadedCount);
 		const trafficData = await fetchTrafficData(repo.name);
 		const filteredViews = filterDataByDateRange(trafficData.views.views, selectedRange);
 		const filteredClones = filterDataByDateRange(trafficData.clones.clones, selectedRange);
@@ -746,15 +746,15 @@ async function displayRepos() {
 		const container = document.createElement('div');
 		container.className = 'chart-box';
 		container.innerHTML = `
-                    <h3><a href="https://github.com/${repo.full_name}" target="_blank">🔗 ${translations[currentLang].repoHeader(repo.name)}</a> | <a href="https://github.com/${repo.full_name}/zipball/main" target="_top">zip⬇</a> | <a href="https://github.com/${repo.full_name}/tarball/main" target="_top">tar⬇</a> | <a href="https://github.com/${repo.full_name}/fork" target="_blank">fork🖈</a> | <a onclick="ToggleReadMe('${repo.name}', '${repo.full_name}')" id="toggle-${repo.name}">README.md+</a></h3>
+                    <h3><a href="https://github.com/${repo.full_name}" target="_blank">🔗 ${translations[lang].repoHeader(repo.name)}</a> | <a href="https://github.com/${repo.full_name}/zipball/main" target="_top">zip⬇</a> | <a href="https://github.com/${repo.full_name}/tarball/main" target="_top">tar⬇</a> | <a href="https://github.com/${repo.full_name}/fork" target="_blank">fork🖈</a> | <a onclick="ToggleReadMe('${repo.name}', '${repo.full_name}')" id="toggle-${repo.name}">README.md+</a></h3>
                     <div id="readme-${repo.name}" style="display:none;"></div>
                     <div class="stats-summary">
                         <div class="stat-item">
-                            <span class="stat-label">${translations[currentLang].views}:</span>
+                            <span class="stat-label">${translations[lang].views}:</span>
                             <span class="stat-value">${trafficData.views.count || 0}</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">${translations[currentLang].clones}:</span>
+                            <span class="stat-label">${translations[lang].clones}:</span>
                             <span class="stat-value">${trafficData.clones.count || 0}</span>
                         </div>
                     </div>
@@ -769,11 +769,11 @@ async function displayRepos() {
                 `;
 		document.getElementById('charts-container').appendChild(container);
 		fetchAndDisplayReadme(repo.name, repo.full_name);
-		createChart(`views-${repo.name}`, translations[currentLang].views, completeViews.map(v => v.count), completeViews.map(v => formatDate(v.timestamp)), trafficData.views.count);
-		createChart(`clones-${repo.name}`, translations[currentLang].clones, completeClones.map(c => c.count), completeClones.map(c => formatDate(c.timestamp)), trafficData.clones.count);
+		createChart(`views-${repo.name}`, translations[lang].views, completeViews.map(v => v.count), completeViews.map(v => formatDate(v.timestamp)), trafficData.views.count);
+		createChart(`clones-${repo.name}`, translations[lang].clones, completeClones.map(c => c.count), completeClones.map(c => formatDate(c.timestamp)), trafficData.clones.count);
 	}
 	document.getElementById('pagination').style.display = 'flex';
-	document.getElementById('loading').textContent = translations[currentLang].pageStats(currentPage, totalPages, allRepos.repositories.length);
+	document.getElementById('loading').textContent = translations[lang].pageStats(currentPage, totalPages, allRepos.repositories.length);
 	setupPagination(allRepos.repositories.length, document.getElementById('per-page').value);
 }
 async function main() {
@@ -788,14 +788,14 @@ async function main() {
 		displayRepos();
 	} catch (error) {
 		console.error('Main function error:', error);
-		showError(translations[currentLang].errorLoadingData);
+		showError(translations[lang].errorLoadingData);
 	}
 }
 // Başlatma
 window.addEventListener('DOMContentLoaded', () => {
 	// Initialize language buttons
 	document.querySelectorAll('.lang-btn').forEach(btn => {
-		btn.classList.toggle('active', btn.textContent === currentLang.toUpperCase());
+		btn.classList.toggle('active', btn.textContent === lang.toUpperCase());
 	});
 	// Initialize time range selector
 	if (document.getElementById('time-range')) {
