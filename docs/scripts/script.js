@@ -459,7 +459,7 @@ function validateTrafficData(data) {
 
 function formatDate(isoString) {
 	const date = new Date(isoString);
-	return date.split('T')[0].toLocaleDateString(currentLang, {
+	return date.toLocaleDateString(currentLang, {
 		year: 'numeric',
 		month: 'short',
 		day: 'numeric'
