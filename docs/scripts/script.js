@@ -698,7 +698,9 @@ function filterDataByDateRange(data, range) {
         const itemDate = new Date(fixedTimestamp);
         itemDate.setUTCHours(0, 0, 0, 0); // Karşılaştırmayı gün bazında yap
 
-        return itemDate >= cutoffDate;
+        if (itemDate < cutoffDate) return false;
+
+        return item;
     });
 }
 // 6. Ana İşlevler
