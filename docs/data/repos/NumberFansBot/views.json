@@ -179,8 +179,13 @@
       "timestamp": "2025-05-22T Above:00:00Z",
       "count": 5,
       "uniques": 1
+    },
+    {
+      "timestamp": "2025-05-23T Above:00:00Z",
+      "count": 1,
+      "uniques": 1
     }
   ],
-  "count": 3039,
-  "uniques": 47
+  "count": 3040,
+  "uniques": 48
 }
