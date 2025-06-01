@@ -337,10 +337,10 @@
     },
     {
       "timestamp": "2025-06-01T Above:00:00Z",
-      "count": 20,
-      "uniques": 12
+      "count": 31,
+      "uniques": 18
     }
   ],
-  "count": 5032,
-  "uniques": 2015
+  "count": 5043,
+  "uniques": 2021
 }
