@@ -334,8 +334,13 @@
       "timestamp": "2025-05-31T Above:00:00Z",
       "count": 111,
       "uniques": 46
+    },
+    {
+      "timestamp": "2025-06-01T Above:00:00Z",
+      "count": 4,
+      "uniques": 4
     }
   ],
-  "count": 5012,
-  "uniques": 2003
+  "count": 5016,
+  "uniques": 2007
 }
