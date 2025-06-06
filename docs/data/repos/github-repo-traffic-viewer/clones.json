@@ -362,10 +362,10 @@
     },
     {
       "timestamp": "2025-06-06T Above:00:00Z",
-      "count": 77,
-      "uniques": 32
+      "count": 83,
+      "uniques": 33
     }
   ],
-  "count": 5615,
-  "uniques": 2247
+  "count": 5621,
+  "uniques": 2248
 }
