@@ -107,10 +107,10 @@
     },
     {
       "timestamp": "2025-06-18T Above:00:00Z",
-      "count": 8,
-      "uniques": 1
+      "count": 9,
+      "uniques": 2
     }
   ],
-  "count": 50,
-  "uniques": 42
+  "count": 51,
+  "uniques": 43
 }
