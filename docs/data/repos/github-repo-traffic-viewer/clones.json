@@ -442,10 +442,10 @@
     },
     {
       "timestamp": "2025-06-22T Above:00:00Z",
-      "count": 40,
-      "uniques": 21
+      "count": 44,
+      "uniques": 23
     }
   ],
-  "count": 7327,
-  "uniques": 3015
+  "count": 7331,
+  "uniques": 3017
 }
