@@ -2,10 +2,10 @@
   "views": [
     {
       "timestamp": "2025-07-03T Above:00:00Z",
-      "count": 6,
-      "uniques": 4
+      "count": 8,
+      "uniques": 5
     }
   ],
-  "count": 6,
-  "uniques": 4
+  "count": 8,
+  "uniques": 5
 }
