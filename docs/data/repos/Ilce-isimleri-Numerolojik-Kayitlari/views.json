@@ -7,10 +7,10 @@
     },
     {
       "timestamp": "2025-07-04T Above:00:00Z",
-      "count": 1,
-      "uniques": 1
+      "count": 3,
+      "uniques": 2
     }
   ],
-  "count": 5,
-  "uniques": 2
+  "count": 7,
+  "uniques": 3
 }
