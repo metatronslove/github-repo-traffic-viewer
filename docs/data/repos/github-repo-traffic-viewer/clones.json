@@ -504,8 +504,13 @@
       "timestamp": "2025-07-04T Above:00:00Z",
       "count": 93,
       "uniques": 44
+    },
+    {
+      "timestamp": "2025-07-05T Above:00:00Z",
+      "count": 15,
+      "uniques": 11
     }
   ],
-  "count": 8552,
-  "uniques": 3584
+  "count": 8567,
+  "uniques": 3595
 }
