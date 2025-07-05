@@ -507,10 +507,10 @@
     },
     {
       "timestamp": "2025-07-05T Above:00:00Z",
-      "count": 15,
-      "uniques": 11
+      "count": 25,
+      "uniques": 17
     }
   ],
-  "count": 8567,
-  "uniques": 3595
+  "count": 8577,
+  "uniques": 3601
 }
