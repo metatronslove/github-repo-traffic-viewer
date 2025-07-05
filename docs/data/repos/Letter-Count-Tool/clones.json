@@ -122,10 +122,10 @@
     },
     {
       "timestamp": "2025-07-05T Above:00:00Z",
-      "count": 1,
-      "uniques": 1
+      "count": 2,
+      "uniques": 2
     }
   ],
-  "count": 38,
-  "uniques": 37
+  "count": 39,
+  "uniques": 38
 }
