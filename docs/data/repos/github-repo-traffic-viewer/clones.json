@@ -552,10 +552,15 @@
     },
     {
       "timestamp": "2025-07-14T Above:00:00Z",
-      "count": 96,
-      "uniques": 50
+      "count": 106,
+      "uniques": 56
+    },
+    {
+      "timestamp": "2025-07-15T Above:00:00Z",
+      "count": 1,
+      "uniques": 1
     }
   ],
-  "count": 9591,
-  "uniques": 4107
+  "count": 9602,
+  "uniques": 4114
 }
