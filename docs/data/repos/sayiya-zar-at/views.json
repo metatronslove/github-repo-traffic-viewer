@@ -4,8 +4,13 @@
       "timestamp": "2025-07-22T Above:00:00Z",
       "count": 17,
       "uniques": 1
+    },
+    {
+      "timestamp": "2025-07-23T Above:00:00Z",
+      "count": 28,
+      "uniques": 1
     }
   ],
-  "count": 17,
-  "uniques": 1
+  "count": 45,
+  "uniques": 2
 }
