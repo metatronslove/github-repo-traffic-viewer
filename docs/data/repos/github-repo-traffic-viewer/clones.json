@@ -709,8 +709,18 @@
       "timestamp": "2025-08-14T Above:00:00Z",
       "count": 12,
       "uniques": 10
+    },
+    {
+      "timestamp": "2025-08-20T Above:00:00Z",
+      "count": 98,
+      "uniques": 42
+    },
+    {
+      "timestamp": "2025-08-21T Above:00:00Z",
+      "count": 58,
+      "uniques": 26
     }
   ],
-  "count": 12279,
-  "uniques": 5340
+  "count": 12435,
+  "uniques": 5408
 }
