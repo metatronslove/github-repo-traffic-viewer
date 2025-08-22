@@ -742,10 +742,15 @@
     },
     {
       "timestamp": "2025-08-21T Above:00:00Z",
-      "count": 70,
-      "uniques": 30
+      "count": 77,
+      "uniques": 31
+    },
+    {
+      "timestamp": "2025-08-22T Above:00:00Z",
+      "count": 1,
+      "uniques": 1
     }
   ],
-  "count": 12912,
-  "uniques": 5611
+  "count": 12920,
+  "uniques": 5613
 }
