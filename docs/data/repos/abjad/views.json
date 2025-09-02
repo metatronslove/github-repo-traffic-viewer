@@ -399,8 +399,13 @@
       "timestamp": "2025-09-01T Above:00:00Z",
       "count": 4,
       "uniques": 1
+    },
+    {
+      "timestamp": "2025-09-02T Above:00:00Z",
+      "count": 1,
+      "uniques": 1
     }
   ],
-  "count": 447,
-  "uniques": 108
+  "count": 448,
+  "uniques": 109
 }
