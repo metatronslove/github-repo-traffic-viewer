@@ -402,10 +402,10 @@
     },
     {
       "timestamp": "2025-09-02T Above:00:00Z",
-      "count": 1,
-      "uniques": 1
+      "count": 36,
+      "uniques": 2
     }
   ],
-  "count": 448,
-  "uniques": 109
+  "count": 483,
+  "uniques": 110
 }
