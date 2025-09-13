@@ -857,10 +857,10 @@
     },
     {
       "timestamp": "2025-09-13T Above:00:00Z",
-      "count": 74,
-      "uniques": 38
+      "count": 79,
+      "uniques": 40
     }
   ],
-  "count": 14828,
-  "uniques": 6436
+  "count": 14833,
+  "uniques": 6438
 }
