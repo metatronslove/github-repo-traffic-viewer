@@ -952,10 +952,10 @@
     },
     {
       "timestamp": "2025-10-02T Above:00:00Z",
-      "count": 61,
-      "uniques": 23
+      "count": 67,
+      "uniques": 25
     }
   ],
-  "count": 16667,
-  "uniques": 7224
+  "count": 16673,
+  "uniques": 7226
 }
