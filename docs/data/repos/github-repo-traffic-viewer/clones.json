@@ -972,10 +972,10 @@
     },
     {
       "timestamp": "2025-10-06T Above:00:00Z",
-      "count": 11,
-      "uniques": 6
+      "count": 18,
+      "uniques": 11
     }
   ],
-  "count": 16993,
-  "uniques": 7367
+  "count": 17000,
+  "uniques": 7372
 }
