@@ -979,8 +979,13 @@
       "timestamp": "2025-10-07T Above:00:00Z",
       "count": 88,
       "uniques": 40
+    },
+    {
+      "timestamp": "2025-10-08T Above:00:00Z",
+      "count": 5,
+      "uniques": 5
     }
   ],
-  "count": 17160,
-  "uniques": 7439
+  "count": 17165,
+  "uniques": 7444
 }
