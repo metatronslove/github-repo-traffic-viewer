@@ -1067,10 +1067,10 @@
     },
     {
       "timestamp": "2025-10-25T Above:00:00Z",
-      "count": 35,
-      "uniques": 20
+      "count": 42,
+      "uniques": 24
     }
   ],
-  "count": 18996,
-  "uniques": 8234
+  "count": 19003,
+  "uniques": 8238
 }
