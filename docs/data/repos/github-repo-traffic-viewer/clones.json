@@ -1107,10 +1107,10 @@
     },
     {
       "timestamp": "2025-11-02T Above:00:00Z",
-      "count": 99,
-      "uniques": 52
+      "count": 102,
+      "uniques": 53
     }
   ],
-  "count": 19981,
-  "uniques": 8682
+  "count": 19984,
+  "uniques": 8683
 }
