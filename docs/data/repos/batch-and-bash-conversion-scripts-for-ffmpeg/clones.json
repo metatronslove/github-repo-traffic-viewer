@@ -99,8 +99,13 @@
       "timestamp": "2025-11-02T Above:00:00Z",
       "count": 9,
       "uniques": 5
+    },
+    {
+      "timestamp": "2025-11-03T Above:00:00Z",
+      "count": 2,
+      "uniques": 1
     }
   ],
-  "count": 417,
-  "uniques": 218
+  "count": 419,
+  "uniques": 219
 }
