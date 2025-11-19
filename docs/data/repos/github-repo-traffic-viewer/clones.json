@@ -1192,10 +1192,10 @@
     },
     {
       "timestamp": "2025-11-19T Above:00:00Z",
-      "count": 42,
-      "uniques": 20
+      "count": 45,
+      "uniques": 21
     }
   ],
-  "count": 22040,
-  "uniques": 9533
+  "count": 22043,
+  "uniques": 9534
 }
