@@ -1207,10 +1207,10 @@
     },
     {
       "timestamp": "2025-11-22T Above:00:00Z",
-      "count": 48,
-      "uniques": 28
+      "count": 52,
+      "uniques": 30
     }
   ],
-  "count": 22315,
-  "uniques": 9674
+  "count": 22319,
+  "uniques": 9676
 }
