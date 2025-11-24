@@ -1217,10 +1217,10 @@
     },
     {
       "timestamp": "2025-11-24T Above:00:00Z",
-      "count": 35,
-      "uniques": 21
+      "count": 43,
+      "uniques": 24
     }
   ],
-  "count": 22503,
-  "uniques": 9776
+  "count": 22511,
+  "uniques": 9779
 }
