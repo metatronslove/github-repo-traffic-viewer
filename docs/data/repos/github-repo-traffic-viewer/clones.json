@@ -1227,10 +1227,10 @@
     },
     {
       "timestamp": "2025-11-26T Above:00:00Z",
-      "count": 42,
-      "uniques": 26
+      "count": 47,
+      "uniques": 29
     }
   ],
-  "count": 22702,
-  "uniques": 9885
+  "count": 22707,
+  "uniques": 9888
 }
