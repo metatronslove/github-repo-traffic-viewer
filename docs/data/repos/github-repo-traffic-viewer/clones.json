@@ -1244,8 +1244,13 @@
       "timestamp": "2025-11-29T Above:00:00Z",
       "count": 101,
       "uniques": 56
+    },
+    {
+      "timestamp": "2025-11-30T Above:00:00Z",
+      "count": 4,
+      "uniques": 4
     }
   ],
-  "count": 23051,
-  "uniques": 10074
+  "count": 23055,
+  "uniques": 10078
 }
