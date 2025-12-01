@@ -1252,10 +1252,10 @@
     },
     {
       "timestamp": "2025-12-01T Above:00:00Z",
-      "count": 65,
-      "uniques": 34
+      "count": 69,
+      "uniques": 36
     }
   ],
-  "count": 23214,
-  "uniques": 10161
+  "count": 23218,
+  "uniques": 10163
 }
