@@ -1257,10 +1257,10 @@
     },
     {
       "timestamp": "2025-12-02T Above:00:00Z",
-      "count": 191,
-      "uniques": 90
+      "count": 237,
+      "uniques": 112
     }
   ],
-  "count": 23736,
-  "uniques": 10404
+  "count": 23782,
+  "uniques": 10426
 }
