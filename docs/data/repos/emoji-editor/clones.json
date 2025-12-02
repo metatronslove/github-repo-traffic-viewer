@@ -87,10 +87,15 @@
     },
     {
       "timestamp": "2025-12-01T Above:00:00Z",
-      "count": 21,
-      "uniques": 10
+      "count": 27,
+      "uniques": 13
+    },
+    {
+      "timestamp": "2025-12-02T Above:00:00Z",
+      "count": 4,
+      "uniques": 1
     }
   ],
-  "count": 263,
-  "uniques": 167
+  "count": 273,
+  "uniques": 171
 }
