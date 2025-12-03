@@ -397,10 +397,10 @@
     },
     {
       "timestamp": "2025-12-03T Above:00:00Z",
-      "count": 2,
+      "count": 3,
       "uniques": 2
     }
   ],
-  "count": 428,
+  "count": 429,
   "uniques": 268
 }
