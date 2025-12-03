@@ -97,10 +97,10 @@
     },
     {
       "timestamp": "2025-12-03T Above:00:00Z",
-      "count": 81,
-      "uniques": 42
+      "count": 82,
+      "uniques": 43
     }
   ],
-  "count": 355,
-  "uniques": 214
+  "count": 356,
+  "uniques": 215
 }
