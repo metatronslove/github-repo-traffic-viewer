@@ -267,10 +267,10 @@
     },
     {
       "timestamp": "2025-12-08T Above:00:00Z",
-      "count": 1,
-      "uniques": 1
+      "count": 2,
+      "uniques": 2
     }
   ],
-  "count": 68,
-  "uniques": 68
+  "count": 69,
+  "uniques": 69
 }
