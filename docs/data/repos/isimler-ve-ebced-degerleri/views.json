@@ -492,10 +492,10 @@
     },
     {
       "timestamp": "2025-12-23T Above:00:00Z",
-      "count": 2,
-      "uniques": 1
+      "count": 3,
+      "uniques": 2
     }
   ],
-  "count": 550,
-  "uniques": 340
+  "count": 551,
+  "uniques": 341
 }
