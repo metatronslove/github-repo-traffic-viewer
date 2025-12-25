@@ -502,10 +502,10 @@
     },
     {
       "timestamp": "2025-12-25T Above:00:00Z",
-      "count": 7,
-      "uniques": 4
+      "count": 10,
+      "uniques": 5
     }
   ],
-  "count": 572,
-  "uniques": 355
+  "count": 575,
+  "uniques": 356
 }
