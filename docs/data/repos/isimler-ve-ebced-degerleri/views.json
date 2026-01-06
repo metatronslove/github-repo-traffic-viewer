@@ -554,8 +554,13 @@
       "timestamp": "2026-01-04T Above:00:00Z",
       "count": 25,
       "uniques": 10
+    },
+    {
+      "timestamp": "2026-01-05T Above:00:00Z",
+      "count": 19,
+      "uniques": 18
     }
   ],
-  "count": 736,
-  "uniques": 456
+  "count": 755,
+  "uniques": 474
 }
