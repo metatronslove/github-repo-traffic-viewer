@@ -344,8 +344,18 @@
       "timestamp": "2026-01-07T Above:00:00Z",
       "count": 0,
       "uniques": 0
+    },
+    {
+      "timestamp": "2026-01-08T Above:00:00Z",
+      "count": 0,
+      "uniques": 0
+    },
+    {
+      "timestamp": "2026-01-09T Above:00:00Z",
+      "count": 1,
+      "uniques": 1
     }
   ],
-  "count": 101,
-  "uniques": 97
+  "count": 102,
+  "uniques": 98
 }
