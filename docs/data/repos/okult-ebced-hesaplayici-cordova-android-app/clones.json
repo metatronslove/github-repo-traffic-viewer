@@ -404,6 +404,11 @@
       "timestamp": "2026-01-11T Above:00:00Z",
       "count": 0,
       "uniques": 0
+    },
+    {
+      "timestamp": "2026-01-12T Above:00:00Z",
+      "count": 0,
+      "uniques": 0
     }
   ],
   "count": 74,
