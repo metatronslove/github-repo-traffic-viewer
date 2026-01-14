@@ -804,8 +804,13 @@
       "timestamp": "2026-01-12T Above:00:00Z",
       "count": 1,
       "uniques": 1
+    },
+    {
+      "timestamp": "2026-01-13T Above:00:00Z",
+      "count": 1,
+      "uniques": 1
     }
   ],
-  "count": 772,
-  "uniques": 196
+  "count": 773,
+  "uniques": 197
 }
