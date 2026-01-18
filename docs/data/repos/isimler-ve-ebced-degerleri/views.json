@@ -614,8 +614,13 @@
       "timestamp": "2026-01-16T Above:00:00Z",
       "count": 9,
       "uniques": 7
+    },
+    {
+      "timestamp": "2026-01-17T Above:00:00Z",
+      "count": 13,
+      "uniques": 10
     }
   ],
-  "count": 919,
-  "uniques": 598
+  "count": 932,
+  "uniques": 608
 }
