@@ -239,8 +239,13 @@
       "timestamp": "2026-01-21T Above:00:00Z",
       "count": 0,
       "uniques": 0
+    },
+    {
+      "timestamp": "2026-01-22T Above:00:00Z",
+      "count": 6,
+      "uniques": 1
     }
   ],
-  "count": 181,
-  "uniques": 15
+  "count": 187,
+  "uniques": 16
 }
