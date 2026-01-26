@@ -344,8 +344,23 @@
       "timestamp": "2026-01-22T Above:00:00Z",
       "count": 0,
       "uniques": 0
+    },
+    {
+      "timestamp": "2026-01-23T Above:00:00Z",
+      "count": 0,
+      "uniques": 0
+    },
+    {
+      "timestamp": "2026-01-24T Above:00:00Z",
+      "count": 0,
+      "uniques": 0
+    },
+    {
+      "timestamp": "2026-01-25T Above:00:00Z",
+      "count": 1,
+      "uniques": 1
     }
   ],
-  "count": 80,
-  "uniques": 67
+  "count": 81,
+  "uniques": 68
 }
