@@ -524,8 +524,18 @@
       "timestamp": "2026-02-05T Above:00:00Z",
       "count": 2,
       "uniques": 2
+    },
+    {
+      "timestamp": "2026-02-06T Above:00:00Z",
+      "count": 1,
+      "uniques": 1
+    },
+    {
+      "timestamp": "2026-02-07T Above:00:00Z",
+      "count": 0,
+      "uniques": 0
     }
   ],
-  "count": 95,
-  "uniques": 84
+  "count": 96,
+  "uniques": 85
 }
