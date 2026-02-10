@@ -1584,8 +1584,28 @@
       "timestamp": "2026-02-05T Above:00:00Z",
       "count": 319,
       "uniques": 62
+    },
+    {
+      "timestamp": "2026-02-06T Above:00:00Z",
+      "count": 311,
+      "uniques": 71
+    },
+    {
+      "timestamp": "2026-02-07T Above:00:00Z",
+      "count": 418,
+      "uniques": 93
+    },
+    {
+      "timestamp": "2026-02-08T Above:00:00Z",
+      "count": 318,
+      "uniques": 81
+    },
+    {
+      "timestamp": "2026-02-09T Above:00:00Z",
+      "count": 245,
+      "uniques": 58
     }
   ],
-  "count": 38476,
-  "uniques": 15347
+  "count": 39768,
+  "uniques": 15650
 }
