@@ -1619,8 +1619,43 @@
       "timestamp": "2026-02-12T Above:00:00Z",
       "count": 308,
       "uniques": 65
+    },
+    {
+      "timestamp": "2026-02-13T Above:00:00Z",
+      "count": 346,
+      "uniques": 69
+    },
+    {
+      "timestamp": "2026-02-14T Above:00:00Z",
+      "count": 415,
+      "uniques": 93
+    },
+    {
+      "timestamp": "2026-02-15T Above:00:00Z",
+      "count": 337,
+      "uniques": 92
+    },
+    {
+      "timestamp": "2026-02-16T Above:00:00Z",
+      "count": 387,
+      "uniques": 64
+    },
+    {
+      "timestamp": "2026-02-17T Above:00:00Z",
+      "count": 308,
+      "uniques": 56
+    },
+    {
+      "timestamp": "2026-02-18T Above:00:00Z",
+      "count": 332,
+      "uniques": 65
+    },
+    {
+      "timestamp": "2026-02-19T Above:00:00Z",
+      "count": 330,
+      "uniques": 68
     }
   ],
-  "count": 40546,
-  "uniques": 15821
+  "count": 43001,
+  "uniques": 16328
 }
