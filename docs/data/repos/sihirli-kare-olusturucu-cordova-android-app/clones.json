@@ -616,6 +616,11 @@
       "uniques": 3
     },
     {
+      "timestamp": "2026-02-05T00:00:00Z",
+      "count": 3,
+      "uniques": 3
+    },
+    {
       "timestamp": "2026-02-06T Above:00:00Z",
       "count": 2,
       "uniques": 2
@@ -776,6 +781,6 @@
       "uniques": 0
     }
   ],
-  "count": 94,
-  "uniques": 94
+  "count": 97,
+  "uniques": 97
 }
