@@ -2,7 +2,7 @@ name: GitHub Traffic Data Collector
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Saatlik çalıştır
+    - cron: '0 * * * *'  # Hourly run
   workflow_dispatch:
 
 permissions:
@@ -64,23 +64,23 @@ jobs:
                       ts = ts.replace('T', 'T') + 'Z'
                   existing_timestamps.add(ts)
     
-              merged = existing[key].copy()  # Mevcut verileri kopyala
+              merged = existing[key].copy()  # Copy existing data
               for item in new[key]:
                   ts = item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT Above:%M:%SZ')
-                  # Aynı zaman damgası varsa, count ve uniques daha büyükse güncelle
+                  # If same timestamp exists, update if count/uniques are larger
                   if ts in existing_timestamps:
                       existing_item = existing_data.get(ts)
                       if existing_item and (item.count > existing_item['count'] or item.uniques > existing_item['uniques']):
-                          # Eski veriyi listeden çıkar
+                          # Remove old data from list
                           merged = [x for x in merged if x['timestamp'] != ts]
-                          # Yeni veriyi ekle
+                          # Add new data
                           merged.append({
                               "timestamp": ts,
                               "count": item.count,
                               "uniques": item.uniques
                           })
                   else:
-                      # Yeni zaman damgasıysa doğrudan ekle
+                      # New timestamp, add directly
                       merged.append({
                           "timestamp": ts,
                           "count": item.count,
@@ -93,7 +93,7 @@ jobs:
               repos = list(g.get_user().get_repos(type='all'))
               repo_index_path = f"{data_dir}/repo-info.json"
               
-              # Mevcut repo index'i oku
+              # Read existing repo index
               existing_repo_index = []
               if os.path.exists(repo_index_path):
                   with open(repo_index_path, 'r') as f:
@@ -104,7 +104,7 @@ jobs:
                   os.makedirs(repo_dir, exist_ok=True)
                   
                   try:
-                      # Views verilerini biriktir
+                      # Views data collection
                       views_file = f"{repo_dir}/views.json"
                       views_data = {"views": [], "count": 0, "uniques": 0}
                       
@@ -120,7 +120,7 @@ jobs:
                       with open(views_file, 'w') as f:
                           json.dump(views_data, f, indent=2)
                       
-                      # Clones verilerini biriktir (3 deneme)
+                      # Clones data collection (3 attempts)
                       clones_file = f"{repo_dir}/clones.json"
                       clones_data = {"clones": [], "count": 0, "uniques": 0}
                       
@@ -136,37 +136,49 @@ jobs:
                               clones_data['uniques'] = sum(c['uniques'] for c in clones_data['clones'])
                               break
                           except Exception as e:
-                              if attempt == 2: print(f"❌ Clone verisi alınamadı: {repo.name}")
+                              if attempt == 2: print(f"❌ Clone data could not be retrieved: {repo.name}")
                               time.sleep(2)
                       
                       with open(clones_file, 'w') as f:
                           json.dump(clones_data, f, indent=2)
 
-                      # Repo index'i güncelle
-                      existing_repo_index = [
-                          r for r in existing_repo_index 
-                          if r['name'] != repo.name
-                      ] + [{
+                      # Update repo index with new fields (backward compatible)
+                      # Check if existing entry has the new fields, if not add defaults
+                      existing_entry = next((r for r in existing_repo_index if r['name'] == repo.name), None)
+                      
+                      new_entry = {
                           "name": repo.name,
                           "full_name": repo.full_name,
                           "private": repo.private,
+                          "default_branch": repo.default_branch,
+                          "homepage": repo.homepage if repo.homepage else "",
                           "updated_at": datetime.now(timezone.utc).isoformat()
-                      }]
+                      }
+                      
+                      # Preserve existing data if any
+                      if existing_entry:
+                          # Keep any old fields that might be useful, but update with new ones
+                          new_entry = {**existing_entry, **new_entry}
+                      
+                      existing_repo_index = [
+                          r for r in existing_repo_index 
+                          if r['name'] != repo.name
+                      ] + [new_entry]
 
-                      time.sleep(1.2)  # Rate limit koruma
+                      time.sleep(1.2)  # Rate limit protection
                       
                   except Exception as e:
-                      print(f"⚠️ {repo.name} işlenemedi: {str(e)}")
+                      print(f"⚠️ {repo.name} could not be processed: {str(e)}")
                       continue
 
-              # Nihai repo index'i yaz
+              # Write final repo index
               with open(repo_index_path, 'w') as f:
                   json.dump(existing_repo_index, f, indent=2)
               
-              print(f"✅ {len(repos)} repo işlendi")
+              print(f"✅ {len(repos)} repos processed")
 
           except Exception as e:
-              print(f"🔥 Kritik hata: {str(e)}")
+              print(f"🔥 Critical error: {str(e)}")
               raise
           EOF
 
@@ -175,6 +187,6 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add docs/data/
-          git commit -m "📈 Tarihsel veri birikimi: $(date -u '+%Y-%m-%dT%H:%MZ')" || echo "Değişiklik yok"
+          git commit -m "📈 Historical data accumulation: $(date -u '+%Y-%m-%dT%H:%MZ')" || echo "No changes"
           git pull --rebase origin main
           git push origin main
