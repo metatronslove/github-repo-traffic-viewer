@@ -1,128 +1,128 @@
 # GitHub Repository Traffic Viewer
 
-🚀 Kendi GitHub depo trafik istatistiklerinizi görüntülemek için kullanışlı bir araç
+🚀 A handy tool to view your own GitHub repository traffic statistics
 
 ![Imagination](https://github.com/metatronslove/github-repo-traffic-viewer/blob/main/docs/forklay%C4%B1n-diyorum-y%C3%BCkledi%C4%9Fimden-beri-bin-klon-s%C4%B1f%C4%B1r-fork.png?raw=true)
 
-## Özellikler
+## Features
 
-- Tüm depolarınız için trafik istatistikleri (views/clones)
-- Zaman içinde görselleştirme
-- Çoklu dil desteği (TR/EN)
-- Sayfalandırma ve filtreleme
+- Traffic statistics for all your repositories (views/clones)
+- Visualization over time
+- Multi-language support (EN/TR)
+- Pagination and filtering
 
-## Nasıl Kullanılır?
+## How to Use?
 
-### 1. Forklayın ve Kurun
+### 1. Fork and Setup
 
-1. **Bu depoyu fork layın**:
-   - Sağ üstteki "Fork" butonuna tıklayarak kendi GitHub hesabınıza kopyalayın
+1. **Fork this repository**:
+   - Click the "Fork" button in the top-right corner to copy it to your GitHub account
 
-2. **Personal Access Token (PAT) Oluşturun**:
-   - GitHub'da sağ üst köşedeki profil fotoğrafınıza tıklayın > "Settings" > "Developer settings" > "Personal access tokens" > "Tokens (classic)"
-   - "Generate new token" > "Generate new token (classic)" butonuna tıklayın
-   - Token için bir isim verin (örneğin "Repo Traffic Viewer")
-   - Aşağıdaki izinleri seçin: (admin:repo_hook, read:org, repo)
-     - `repo` (tam kontrol)
-     - `workflow` (Actions çalıştırmak için)
-   - "Generate token" butonuna basın
-   - **Oluşturulan token'ı bir yere kaydedin**, çünkü sadece bir kez gösterilecek!
+2. **Create a Personal Access Token (PAT)**:
+   - Click your profile picture in the top-right corner of GitHub > "Settings" > "Developer settings" > "Personal access tokens" > "Tokens (classic)"
+   - Click "Generate new token" > "Generate new token (classic)"
+   - Give your token a name (e.g., "Repo Traffic Viewer")
+   - Select the following permissions: (admin:repo_hook, read:org, repo)
+     - `repo` (full control)
+     - `workflow` (to run Actions)
+   - Click "Generate token"
+   - **Save the generated token somewhere safe** – it will only be shown once!
 
-3. **Token'ı Repository Secret olarak ekleyin**:
-   - Forkladığınız depoya gidin > "Settings" > "Secrets and variables" > "Actions"
-   - "New repository secret" butonuna tıklayın
-   - Name kısmına `PERSONAL_ACCESS_TOKEN` yazın
-   - Value kısmına oluşturduğunuz token'ı yapıştırın
-   - "Add secret" butonuna basın
+3. **Add the token as a Repository Secret**:
+   - Go to your forked repository > "Settings" > "Secrets and variables" > "Actions"
+   - Click "New repository secret"
+   - Enter `PERSONAL_ACCESS_TOKEN` in the Name field
+   - Paste your token in the Value field
+   - Click "Add secret"
 
-4. **GitHub Pages'i etkinleştirin**:
-   - Forkladığınız depoda "Settings" > "Pages" sekmesine gidin
-   - Source kısmından "Deploy from a branch" seçeneğini seçin
-   - Branch olarak "main", folder olarak "/docs" seçin
-   - Save butonuna basın
+4. **Enable GitHub Pages**:
+   - In your forked repository, go to "Settings" > "Pages"
+   - Under "Source", select "Deploy from a branch"
+   - Select "main" as the branch and "/docs" as the folder
+   - Click Save
 
-5. **Actions'ı manuel çalıştırın (ilk veri toplama için)**:
-   - Forkladığınız depoda "Actions" sekmesine gidin
-   - "GitHub Traffic Data Collector" workflow'unu seçin
-   - "Run workflow" butonuna basarak manuel çalıştırın
-   - Bu işlem ilk verilerin toplanmasını sağlayacak
+5. **Run Actions manually (for initial data collection)**:
+   - Go to the "Actions" tab in your forked repository
+   - Select the "GitHub Traffic Data Collector" workflow
+   - Click "Run workflow" to trigger it manually
+   - This will collect the initial data
 
-6. **Sayfanız hazır!**:
-   - Birkaç dakika sonra `https://[KULLANICI-ADINIZ].github.io/github-repo-traffic-viewer/` adresinden erişebilirsiniz
-   - Veriler her saat başı otomatik güncellenecek
+6. **Your page is ready!**:
+   - After a few minutes, you can access it at `https://[YOUR-USERNAME].github.io/github-repo-traffic-viewer/`
+   - Data will be updated automatically every hour
 
-### 2. Yeni Dil Ekleme
+### 2. Adding a New Language
 
-Depoyu kendi dilinizde kullanmak için:
+To use the repository in your own language:
 
-1. `index.html` dosyasını açın
-2. `translations` nesnesini bulun (satır ~130)
-3. Yeni bir dil bloğu ekleyin, örneğin İspanyolca için:
+1. Open the `index.html` file
+2. Find the `translations` object (line ~130 in script.js)
+3. Add a new language block, for example for Spanish:
 
 ```javascript
 es: {
     title: "Estadísticas de tráfico de repositorios",
     loadingAuth: "Verificando sesión de GitHub...",
-    // Diğer çevirileri ekleyin...
+    // Add other translations...
 }
 ```
 
-4. Dil seçiciye buton ekleyin (satır ~40):
+4. Add a button to the language switcher (line ~40 in index.html):
 
 ```html
 <button class="lang-btn" onclick="changeLanguage('es')">ES</button>
 ```
 
-### 3. Geliştirme ve Özelleştirme
+### 3. Development and Customization
 
-- **Tema değiştirme**: `style` etiketleri içindeki renk kodlarını değiştirin
-- **Yeni özellikler**: JavaScript kodunu (`script` etiketi içinde) düzenleyerek yeni grafikler ekleyebilirsiniz
-- **API entegrasyonları**: GitHub API'sini kullanarak yeni veriler ekleyebilirsiniz
+- **Change theme**: Modify the color codes in the `style` tags
+- **New features**: Add new charts by editing the JavaScript code (inside the `script` tag)
+- **API integrations**: Add new data using the GitHub API
 
-## Sık Sorulan Sorular
+## Frequently Asked Questions
 
-### ❓ Veriler ne sıklıkla güncellenir?
-- Varsayılan olarak her saat başı güncellenir (`cron: '0 * * * *'`). 
-- `fetch-traffic.yml` dosyasını düzenleyerek sıklığı değiştirebilirsiniz.
+### ❓ How often is the data updated?
+- By default, it updates every hour (`cron: '0 * * * *'`).
+- You can change the frequency by editing the `fetch-traffic.yml` file.
 
-### ❓ Neden verileri göremiyorum?
-1. PAT (Personal Access Token) doğru izinlere sahip mi kontrol edin (`repo` ve `workflow`)
-2. Actions sekmesinde workflow'un başarıyla çalıştığından emin olun
-3. İlk çalıştırmada manuel olarak workflow'u tetiklediğinizden emin olun
+### ❓ Why can't I see any data?
+1. Check if your PAT has the correct permissions (`repo` and `workflow`)
+2. Make sure the workflow has run successfully in the Actions tab
+3. Ensure you've triggered the workflow manually on the first run
 
-### ❓ Veriler nerede saklanıyor?
-- Tüm veriler `docs/data/` klasörü altında JSON formatında saklanır
-- Bu dosyalar GitHub'da public olarak görülebilir, ancak sadece sizin depolarınızın trafik verilerini içerir
+### ❓ Where is the data stored?
+- All data is stored in JSON format under the `docs/data/` folder
+- These files are publicly visible on GitHub, but they only contain traffic data for your repositories
 
-## Neden Forklamalısınız?
+## Why Should You Fork This?
 
-✔️ **Gizlilik**: Kendi trafik verileriniz sadece sizin tarayıcınızda işlenir  
-✔️ **Özelleştirme**: Kendi dilinizi ve görsel temasını ekleyebilirsiniz  
-✔️ **Sürekli Erişim**: Orijinal repo silinse bile sizin fork'unuz çalışmaya devam eder  
-✔️ **Geliştirme**: Kendi ihtiyaçlarınıza göre araçı geliştirebilirsiniz  
+✔️ **Privacy**: Your traffic data is processed only in your browser  
+✔️ **Customization**: Add your own language and visual theme  
+✔️ **Continuous Access**: Even if the original repo is deleted, your fork continues to work  
+✔️ **Development**: Improve the tool according to your own needs  
 
-## Katkıda Bulunma
+## Contributing
 
-Eğer bu projeyi geliştirmek isterseniz:
+If you'd like to improve this project:
 
-1. Repoyu fork layın
-2. Yeni bir branch oluşturun (`git checkout -b feature/awesome-feature`)
-3. Değişikliklerinizi commit edin (`git commit -m 'Add some awesome feature'`)
-4. Branch'inize push yapın (`git push origin feature/awesome-feature`)
-5. Bir Pull Request açın
+1. Fork the repository
+2. Create a new branch (`git checkout -b feature/awesome-feature`)
+3. Commit your changes (`git commit -m 'Add some awesome feature'`)
+4. Push to your branch (`git push origin feature/awesome-feature`)
+5. Open a Pull Request
 
-## Lisans
+## License
 
-Bu proje MIT lisansı altında lisanslanmıştır - detaylar için [LICENSE](LICENSE) dosyasına bakın.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-**Not**: Bu araç sadece fork yapan kullanıcının kendi depolarının trafik verilerini gösterir. Başka kullanıcıların verilerini görüntülemez.
+**Note**: This tool only shows traffic data for the forking user's own repositories. It does not display data for other users.
 
-## ☕ Destek Olun / Support
+## ☕ Support
 
-Projemi beğendiyseniz, bana bir kahve ısmarlayarak destek olabilirsiniz!
+If you like my project, you can support me by buying me a coffee!
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/metatronslove)
 
-Teşekkürler! 🙏
+Thank you! 🙏
