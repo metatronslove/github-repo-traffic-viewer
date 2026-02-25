@@ -790,7 +790,7 @@ async function displayRepos() {
         `;
         
         if (homepage) {
-            headerLinks += ` | <a href="${homepage}" target="_blank">🌐 website</a>`;
+            headerLinks += ` | <a href="${homepage}" target="_blank">🌐</a>`;
         }
         
         container.innerHTML = `
