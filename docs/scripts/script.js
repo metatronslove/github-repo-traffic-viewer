@@ -7,8 +7,6 @@ function githubMarkdownToHtml(markdown) {
     // Create a container div to hold our rendered HTML
     const container = document.createElement('div');
     // Use marked.js library with GitHub Flavored Markdown (GFM) options
-    // You'll need to include marked.js in your project:
-    // https://cdn.jsdelivr.net/npm/marked/marked.min.js
     if (typeof marked === 'undefined') {
         throw new Error('marked.js library is required. Please include it before using this function.');
     }
@@ -40,6 +38,7 @@ function githubMarkdownToHtml(markdown) {
     postProcessHtml(container);
     return container.innerHTML;
 }
+
 /**
  * Additional post-processing to better match GitHub's rendering
  * @param {HTMLElement} container - The container with rendered markdown
@@ -58,7 +57,7 @@ function postProcessHtml(container) {
     });
     // Add anchor links to headers like GitHub
     container.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(header => {
-        const id = header.textContent.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-') // Chinese character support
+        const id = header.textContent.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-')
             .replace(/^-+|-+$/g, '');
         header.id = id;
         const anchor = document.createElement('a');
@@ -68,6 +67,7 @@ function postProcessHtml(container) {
         header.prepend(anchor);
     });
 }
+
 function ToggleReadMe(repoName, fullName) {
     const readmeContainer = document.getElementById(`readme-${repoName}`);
     const toggleLinkText = document.getElementById(`toggle-${repoName}`);
@@ -79,6 +79,7 @@ function ToggleReadMe(repoName, fullName) {
         toggleLinkText.innerHTML = 'README.md+';
     }
 }
+
 async function fetchAndDisplayReadme(repo) {
     const repoName = repo.name;
     const fullName = repo.full_name;
@@ -121,6 +122,7 @@ async function fetchAndDisplayReadme(repo) {
         readmeContainer.style.display = 'none';
     }
 }
+
 // Convert relative URLs to absolute URLs with correct branch
 function convertRelativeUrls(markdown, fullName, defaultBranch = 'main') {
     // Images: ![alt text](relative/path)
@@ -147,6 +149,7 @@ function convertRelativeUrls(markdown, fullName, defaultBranch = 'main') {
     });
     return markdown;
 }
+
 // Process images and links in HTML
 function processImagesAndLinks(container, fullName, defaultBranch = 'main') {
     // Images
@@ -167,7 +170,7 @@ function processImagesAndLinks(container, fullName, defaultBranch = 'main') {
                 ? `https://github.com/${fullName}/blob/${defaultBranch}${href}`
                 : `https://github.com/${fullName}/blob/${defaultBranch}/${href}`;
             a.setAttribute('href', absoluteHref);
-            a.setAttribute('target', '_blank'); // Open in new tab
+            a.setAttribute('target', '_blank');
         }
     });
 }
@@ -217,7 +220,8 @@ function initTheme() {
         }
     });
 }
-// 2. Language Management - Default is now English
+
+// 2. Language Management - Default is English
 const translations = {
     en: {
         title: "GitHub Repository Traffic Stats",
@@ -230,8 +234,7 @@ const translations = {
                         <option value="25">25</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
-                    </select>
-            `,
+                    </select>`,
         pageStats: (current, total, count) => `Page ${current}/${total} | Total ${count} repos`,
         repoHeader: (name) => `<span class="repo-name">${name}</span> repository`,
         views: "Views",
@@ -261,8 +264,7 @@ const translations = {
                         <option value="180d">Last 6 Months</option>
                         <option value="365d">Last Year</option>
                         <option value="all">All Time</option>
-                    </select>
-                    `
+                    </select>`
     },
     tr: {
         title: "GitHub Depo Trafik Verileri",
@@ -275,8 +277,7 @@ const translations = {
                         <option value="25">25</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
-                    </select>
-                        `,
+                    </select>`,
         pageStats: (current, total, count) => `Sayfa ${current}/${total} | Toplam ${count} depo`,
         repoHeader: (name) => `<span class="repo-name">${name}</span> deposu`,
         views: "Görüntülenmeler",
@@ -306,50 +307,47 @@ const translations = {
                         <option value="180d">Son 6 Ay</option>
                         <option value="365d">Son 1 Yıl</option>
                         <option value="all">Tüm Zamanlar</option>
-                    </select>
-                    `
+                    </select>`
     }
 };
 
-let lang = localStorage.getItem('lang') || 'en'; // Default is now English
+let lang = localStorage.getItem('lang') || 'en'; // Default is English
 
 function updateAllTranslations() {
     document.querySelector('[data-translate="title"]').textContent = translations[lang].title;
-    let TimeRangesPreviousValue = String(document.getElementById('time-range').value);
+    
+    // Save current values before updating HTML
+    const currentTimeRange = document.getElementById('time-range')?.value || '30d';
+    const currentPerPage = document.getElementById('per-page')?.value || '25';
+    
+    // Update time range selector HTML
     document.querySelector('[data-translate="timeRange"]').innerHTML = translations[lang].timeRange;
-    let timeRangechoices = ['1d', '7d', '30d', '90d', '180d', '365d', 'all'];
-    for (let d = 0; d < timeRangechoices.length; d += 1) {
-        const option = document.getElementById('time-range').querySelector(`option[value='${timeRangechoices[d]}']`);
-        if (option) {
-            if (option.hasAttribute('selected') || option.selected) {
-                option.removeAttribute('selected');
-                option.selected = false;
-            }
-        }
+    
+    // Restore selected value for time range
+    const timeRangeSelector = document.getElementById('time-range');
+    if (timeRangeSelector) {
+        timeRangeSelector.value = currentTimeRange;
+        // Re-attach event listener
+        timeRangeSelector.removeEventListener('change', handleTimeRangeChange);
+        timeRangeSelector.addEventListener('change', handleTimeRangeChange);
     }
-    let timeRangeoptionToSelect = document.getElementById('time-range').querySelector(`option[value='${TimeRangesPreviousValue}']`);
-    if (timeRangeoptionToSelect) {
-        timeRangeoptionToSelect.setAttribute('selected', 'selected');
-    }
-    let PerPagePreviousValue = String(document.getElementById('per-page').value);
+    
+    // Update per page selector HTML
     document.querySelector('[data-translate="perPage"]').innerHTML = translations[lang].perPage;
-    let perPagechoices = ['10', '25', '50', '100'];
-    for (let d = 0; d < perPagechoices.length; d += 1) {
-        const option = document.getElementById('per-page').querySelector(`option[value='${perPagechoices[d]}']`);
-        if (option) {
-            if (option.hasAttribute('selected') || option.selected) {
-                option.removeAttribute('selected');
-                option.selected = false;
-            }
-        }
+    
+    // Restore selected value for per page
+    const perPageSelector = document.getElementById('per-page');
+    if (perPageSelector) {
+        perPageSelector.value = currentPerPage;
+        // Re-attach event listener
+        perPageSelector.removeEventListener('change', handlePerPageChange);
+        perPageSelector.addEventListener('change', handlePerPageChange);
     }
-    let optionToSelect = document.getElementById('per-page').querySelector(`option[value='${PerPagePreviousValue}']`);
-    if (optionToSelect) {
-        optionToSelect.setAttribute('selected', 'selected');
-    }
+    
     if (document.getElementById('loading')) {
         document.getElementById('loading').textContent = translations[lang].loadingAuth;
     }
+    
     const pagination = document.getElementById('pagination');
     if (pagination) {
         const prevBtn = pagination.querySelector('button:first-child');
@@ -359,22 +357,36 @@ function updateAllTranslations() {
     }
 }
 
+// Event handler functions
+function handleTimeRangeChange(e) {
+    console.log('Time range changed to:', e.target.value);
+    currentPage = 1; // Reset to first page
+    displayRepos();
+}
+
+function handlePerPageChange(e) {
+    console.log('Per page changed to:', e.target.value);
+    reposPerPage = parseInt(e.target.value) || 25;
+    currentPage = 1; // Reset to first page
+    displayRepos();
+}
+
 function mergeDuplicateDates(data) {
-  const merged = {};
+    const merged = {};
 
-  data.forEach(item => {
-    const fixedTimestamp = fixTimestamp(item.timestamp);
-    const dateKey = fixedTimestamp.split('T')[0];
+    data.forEach(item => {
+        const fixedTimestamp = fixTimestamp(item.timestamp);
+        const dateKey = fixedTimestamp.split('T')[0];
 
-    if (!merged[dateKey]) {
-      merged[dateKey] = { ...item, timestamp: fixedTimestamp };
-    } else {
-      merged[dateKey].count += item.count;
-      merged[dateKey].uniques += item.uniques;
-    }
-  });
+        if (!merged[dateKey]) {
+            merged[dateKey] = { ...item, timestamp: fixedTimestamp };
+        } else {
+            merged[dateKey].count += item.count;
+            merged[dateKey].uniques += item.uniques;
+        }
+    });
 
-  return Object.values(merged);
+    return Object.values(merged);
 }
 
 function changeLanguage(newLang) {
@@ -382,15 +394,17 @@ function changeLanguage(newLang) {
     localStorage.setItem('lang', lang);
     updateAllTranslations();
     document.getElementById('charts-container').innerHTML = '';
+    currentPage = 1; // Reset to first page
     displayRepos();
     document.querySelectorAll('.lang-btn').forEach(btn => {
         btn.classList.toggle('active', btn.textContent.toLowerCase() === lang);
     });
 }
+
 // 3. Data Management
 let allRepos = [];
 let currentPage = 1;
-let reposPerPage = 25; // Default value
+let reposPerPage = 25;
 let totalPages = 1;
 
 function getBasePath() {
@@ -414,13 +428,11 @@ async function fetchTrafficData(repoName) {
         
         if (viewsRes.ok) {
             views = await viewsRes.json();
-            // Backward compatibility: ensure views.views exists
             if (!views.views) views.views = [];
         }
         
         if (clonesRes.ok) {
             clones = await clonesRes.json();
-            // Backward compatibility: ensure clones.clones exists
             if (!clones.clones) clones.clones = [];
         }
 
@@ -449,11 +461,13 @@ async function fetchTrafficData(repoName) {
         };
     }
 }
+
 async function fetchUserData() {
     return {
         login: "auto-generated"
     };
 }
+
 async function fetchAllRepos() {
     try {
         const basePath = getBasePath();
@@ -498,7 +512,6 @@ function validateTrafficData(data) {
 }
 
 function fixTimestamp(timestamp) {
-    // Fix "Above" in timestamps
     if (typeof timestamp !== 'string') return '1970-01-01T00:00:00Z';
     return timestamp.replace(' Above', '');
 }
@@ -507,7 +520,6 @@ function safeDateParse(timestamp) {
     const fixed = fixTimestamp(timestamp);
     const date = new Date(fixed);
 
-    // Fallback for invalid dates
     if (isNaN(date.getTime())) {
         console.warn('Invalid date detected, using fallback:', timestamp);
         const datePart = fixed.split('T')[0] || '1970-01-01';
@@ -536,7 +548,6 @@ function fillMissingDates(data, range) {
 
     const dateMap = new Map();
 
-    // Process all data and fix invalid dates
     data.forEach(item => {
         const fixedTimestamp = fixTimestamp(item.timestamp);
         const date = safeDateParse(fixedTimestamp);
@@ -548,14 +559,12 @@ function fillMissingDates(data, range) {
         });
     });
 
-    // Determine date range
     const sortedDates = Array.from(dateMap.keys()).sort();
     if (sortedDates.length === 0) return [];
 
     const startDate = safeDateParse(sortedDates[0]);
     const endDate = safeDateParse(sortedDates[sortedDates.length - 1]);
 
-    // Fill missing dates
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
         const dateStr = d.toISOString().split('T')[0];
         if (!dateMap.has(dateStr)) {
@@ -567,11 +576,11 @@ function fillMissingDates(data, range) {
         }
     }
 
-    // Return sorted and filled data
     return Array.from(dateMap.values()).sort((a, b) => {
         return safeDateParse(a.timestamp) - safeDateParse(b.timestamp);
     });
 }
+
 // 4. Chart Management
 function createChart(canvasId, label, data, labels, total) {
     const ctx = document.getElementById(canvasId);
@@ -632,6 +641,7 @@ function createChart(canvasId, label, data, labels, total) {
         }
     });
 }
+
 // 5. UI Management
 function showError(messageKey) {
     const messages = {
@@ -659,6 +669,7 @@ function setupPagination(totalRepos, reposPerPage) {
     const paginationDiv = document.getElementById('pagination');
     paginationDiv.innerHTML = '';
     if (totalPages <= 1) return;
+    
     const prevButton = document.createElement('button');
     prevButton.innerHTML = translations[lang].previousPage;
     prevButton.disabled = currentPage === 1;
@@ -669,12 +680,15 @@ function setupPagination(totalRepos, reposPerPage) {
         }
     });
     paginationDiv.appendChild(prevButton);
+    
     const maxVisiblePages = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
     if (endPage - startPage + 1 < maxVisiblePages) {
         startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
+    
     for (let i = startPage; i <= endPage; i++) {
         const pageButton = document.createElement('button');
         pageButton.textContent = i;
@@ -687,6 +701,7 @@ function setupPagination(totalRepos, reposPerPage) {
         });
         paginationDiv.appendChild(pageButton);
     }
+    
     const nextButton = document.createElement('button');
     nextButton.innerHTML = translations[lang].nextPage;
     nextButton.disabled = currentPage === totalPages;
@@ -707,7 +722,6 @@ function filterDataByDateRange(data, range) {
     const days = parseInt(range.replace('d', '')) || 30;
     const cutoffDate = new Date();
 
-    // Set to UTC beginning of day
     cutoffDate.setUTCHours(0, 0, 0, 0);
     cutoffDate.setUTCDate(cutoffDate.getUTCDate() - days);
 
@@ -716,11 +730,12 @@ function filterDataByDateRange(data, range) {
 
         const fixedTimestamp = fixTimestamp(item.timestamp);
         const itemDate = safeDateParse(fixedTimestamp);
-        itemDate.setUTCHours(0, 0, 0, 0); // Compare by day only
+        itemDate.setUTCHours(0, 0, 0, 0);
 
         return itemDate >= cutoffDate;
     });
 }
+
 // 6. Main Functions
 async function displayRepos() {
     if (!allRepos || !allRepos.repositories) {
@@ -728,18 +743,11 @@ async function displayRepos() {
         return;
     }
     
-    // Safe way to get time range value with fallback
-    const getTimeRangeValue = () => {
-        const selector = document.getElementById('time-range');
-        return selector ? selector.value : '30d'; // Default to '30d' if not found
-    };
-    const selectedRange = getTimeRangeValue();
-    
-    // Get per-page value
+    const timeRangeSelector = document.getElementById('time-range');
     const perPageSelector = document.getElementById('per-page');
-    if (perPageSelector) {
-        reposPerPage = parseInt(perPageSelector.value) || 25;
-    }
+    
+    const selectedRange = timeRangeSelector ? timeRangeSelector.value : '30d';
+    reposPerPage = perPageSelector ? parseInt(perPageSelector.value) || 25 : 25;
     
     const startIdx = (currentPage - 1) * reposPerPage;
     const endIdx = startIdx + reposPerPage;
@@ -749,7 +757,6 @@ async function displayRepos() {
     document.getElementById('charts-container').innerHTML = '';
     document.getElementById('loading').textContent = translations[lang].loadingRepos(0);
     
-    // Safely show UI elements if they exist
     const showElementIfExists = (id) => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'block';
@@ -762,7 +769,6 @@ async function displayRepos() {
     for (const repo of reposToShow) {
         document.getElementById('loading').textContent = translations[lang].loadingRepos(++loadedCount);
         
-        // Ensure repo has default_branch for backward compatibility
         const defaultBranch = repo.default_branch || 'main';
         const homepage = repo.homepage || '';
         
@@ -775,7 +781,6 @@ async function displayRepos() {
         const container = document.createElement('div');
         container.className = 'chart-box';
         
-        // Build the header links
         let headerLinks = `
             <a href="https://github.com/${repo.full_name}" target="_blank">🔗 ${translations[lang].repoHeader(repo.name)}</a> | 
             <a href="https://github.com/${repo.full_name}/zipball/${defaultBranch}" target="_top">zip⬇</a> | 
@@ -784,36 +789,34 @@ async function displayRepos() {
             <a onclick="ToggleReadMe('${repo.name}', '${repo.full_name}')" id="toggle-${repo.name}">README.md+</a>
         `;
         
-        // Add homepage link if exists
         if (homepage) {
             headerLinks += ` | <a href="${homepage}" target="_blank">🌐 website</a>`;
         }
         
         container.innerHTML = `
-                    <h3>${headerLinks}</h3>
-                    <div id="readme-${repo.name}" style="display:none;"></div>
-                    <div class="stats-summary">
-                        <div class="stat-item">
-                            <span class="stat-label">${translations[lang].views}:</span>
-                            <span class="stat-value">${trafficData.views.count || 0}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">${translations[lang].clones}:</span>
-                            <span class="stat-value">${trafficData.clones.count || 0}</span>
-                        </div>
-                    </div>
-                    <div class="chart-row">
-                        <div class="chart-container">
-                            <canvas id="views-${repo.name}"></canvas>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="clones-${repo.name}"></canvas>
-                        </div>
-                    </div>
-                `;
+            <h3>${headerLinks}</h3>
+            <div id="readme-${repo.name}" style="display:none;"></div>
+            <div class="stats-summary">
+                <div class="stat-item">
+                    <span class="stat-label">${translations[lang].views}:</span>
+                    <span class="stat-value">${trafficData.views.count || 0}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">${translations[lang].clones}:</span>
+                    <span class="stat-value">${trafficData.clones.count || 0}</span>
+                </div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-container">
+                    <canvas id="views-${repo.name}"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="clones-${repo.name}"></canvas>
+                </div>
+            </div>
+        `;
         document.getElementById('charts-container').appendChild(container);
         
-        // Pass the whole repo object for README fetching (includes default_branch)
         fetchAndDisplayReadme(repo);
         
         createChart(`views-${repo.name}`, translations[lang].views, 
@@ -825,21 +828,24 @@ async function displayRepos() {
                    completeClones.map(c => formatDate(c.timestamp)), 
                    trafficData.clones.count);
     }
-    document.getElementById('pagination').style.display = 'flex';
-    document.getElementById('loading').textContent = translations[lang].pageStats(currentPage, totalPages, allRepos.repositories.length);
-    setupPagination(allRepos.repositories.length, reposPerPage);
+    
+    const paginationDiv = document.getElementById('pagination');
+    if (paginationDiv) {
+        paginationDiv.style.display = 'flex';
+        document.getElementById('loading').textContent = translations[lang].pageStats(currentPage, totalPages, allRepos.repositories.length);
+        setupPagination(allRepos.repositories.length, reposPerPage);
+    }
 }
+
 async function main() {
     try {
         initTheme();
         
-        // Set default language to English but respect saved preference
         const savedLang = localStorage.getItem('lang');
         lang = savedLang || 'en';
         
         updateAllTranslations();
         
-        // Update active language button
         document.querySelectorAll('.lang-btn').forEach(btn => {
             btn.classList.toggle('active', btn.textContent.toLowerCase() === lang);
         });
@@ -855,6 +861,7 @@ async function main() {
         showError(translations[lang].errorLoadingData);
     }
 }
+
 // Initialization
 window.addEventListener('DOMContentLoaded', () => {
     // Initialize language buttons
@@ -862,27 +869,20 @@ window.addEventListener('DOMContentLoaded', () => {
         btn.classList.toggle('active', btn.textContent.toLowerCase() === lang);
     });
     
-    // Initialize time range selector
+    // Setup time range selector with fresh event listener
     const timeRangeSelector = document.getElementById('time-range');
     if (timeRangeSelector) {
-        // Remove existing listeners and add new one
-        timeRangeSelector.removeEventListener('change', displayRepos);
-        timeRangeSelector.addEventListener('change', displayRepos);
+        const newTimeRangeSelector = timeRangeSelector.cloneNode(true);
+        timeRangeSelector.parentNode.replaceChild(newTimeRangeSelector, timeRangeSelector);
+        newTimeRangeSelector.addEventListener('change', handleTimeRangeChange);
     }
     
-    // Initialize per-page selector
+    // Setup per page selector with fresh event listener
     const perPageSelector = document.getElementById('per-page');
     if (perPageSelector) {
-        perPageSelector.removeEventListener('change', (e) => {
-            reposPerPage = parseInt(e.target.value) || 25;
-            currentPage = 1;
-            displayRepos();
-        });
-        perPageSelector.addEventListener('change', (e) => {
-            reposPerPage = parseInt(e.target.value) || 25;
-            currentPage = 1;
-            displayRepos();
-        });
+        const newPerPageSelector = perPageSelector.cloneNode(true);
+        perPageSelector.parentNode.replaceChild(newPerPageSelector, perPageSelector);
+        newPerPageSelector.addEventListener('change', handlePerPageChange);
     }
     
     // Start the main application
