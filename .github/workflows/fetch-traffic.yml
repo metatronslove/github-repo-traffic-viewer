@@ -52,35 +52,30 @@ jobs:
           data_dir = os.environ['DATA_DIR']
           
           def merge_data(existing, new, key):
-              # Normalize timestamps by converting to datetime objects for comparison
+              # Normalize timestamps
               existing_timestamps = set()
               existing_data = {item['timestamp']: item for item in existing[key]}
               for item in existing[key]:
                   ts = item['timestamp']
                   if ts.endswith('+00:00'):
-                      ts = ts.replace('+00:00', 'Z')  # Convert to Zulu time format
+                      ts = ts.replace('+00:00', 'Z')
                   elif not (ts.endswith('Z') and 'T' in ts):
-                      # Handle naive datetime strings by adding Z
                       ts = ts.replace('T', 'T') + 'Z'
                   existing_timestamps.add(ts)
     
-              merged = existing[key].copy()  # Copy existing data
+              merged = existing[key].copy()
               for item in new[key]:
                   ts = item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
-                  # If same timestamp exists, update if count/uniques are larger
                   if ts in existing_timestamps:
                       existing_item = existing_data.get(ts)
                       if existing_item and (item.count > existing_item['count'] or item.uniques > existing_item['uniques']):
-                          # Remove old data from list
                           merged = [x for x in merged if x['timestamp'] != ts]
-                          # Add new data
                           merged.append({
                               "timestamp": ts,
                               "count": item.count,
                               "uniques": item.uniques
                           })
                   else:
-                      # New timestamp, add directly
                       merged.append({
                           "timestamp": ts,
                           "count": item.count,
@@ -98,6 +93,10 @@ jobs:
               if os.path.exists(repo_index_path):
                   with open(repo_index_path, 'r') as f:
                       existing_repo_index = json.load(f)
+
+              # Create a dictionary for faster lookup
+              existing_repo_dict = {repo['name']: repo for repo in existing_repo_index}
+              updated_repo_dict = {}
 
               for repo in repos:
                   repo_dir = f"{data_dir}/repos/{repo.name}"
@@ -120,7 +119,7 @@ jobs:
                       with open(views_file, 'w') as f:
                           json.dump(views_data, f, indent=2)
                       
-                      # Clones data collection (3 attempts)
+                      # Clones data collection
                       clones_file = f"{repo_dir}/clones.json"
                       clones_data = {"clones": [], "count": 0, "uniques": 0}
                       
@@ -142,9 +141,8 @@ jobs:
                       with open(clones_file, 'w') as f:
                           json.dump(clones_data, f, indent=2)
 
-                      # Update repo index with new fields (backward compatible)
-                      # Check if existing entry has the new fields, if not add defaults
-                      existing_entry = next((r for r in existing_repo_index if r['name'] == repo.name), None)
+                      # Update repo info
+                      existing_entry = existing_repo_dict.get(repo.name, {})
                       
                       new_entry = {
                           "name": repo.name,
@@ -155,74 +153,78 @@ jobs:
                           "updated_at": datetime.now(timezone.utc).isoformat()
                       }
                       
-                      # Preserve existing data if any
-                      if existing_entry:
-                          # Keep any old fields that might be useful, but update with new ones
-                          new_entry = {**existing_entry, **new_entry}
-                      
-                      existing_repo_index = [
-                          r for r in existing_repo_index 
-                          if r['name'] != repo.name
-                      ] + [new_entry]
+                      # Merge with existing data
+                      updated_repo_dict[repo.name] = {**existing_entry, **new_entry}
 
                       time.sleep(1.2)  # Rate limit protection
                       
                   except Exception as e:
                       print(f"⚠️ {repo.name} could not be processed: {str(e)}")
+                      # Keep existing data if processing failed
+                      if repo.name in existing_repo_dict:
+                          updated_repo_dict[repo.name] = existing_repo_dict[repo.name]
                       continue
 
-              # Write final repo index
+              # Write final repo index (sorted for consistency)
+              final_repo_list = sorted(updated_repo_dict.values(), key=lambda x: x['name'])
               with open(repo_index_path, 'w') as f:
-                  json.dump(existing_repo_index, f, indent=2)
+                  json.dump(final_repo_list, f, indent=2)
               
-              print(f"✅ {len(repos)} repos processed")
+              print(f"✅ {len(final_repo_list)} repos processed")
 
           except Exception as e:
               print(f"🔥 Critical error: {str(e)}")
               raise
           EOF
 
-      - name: Commit and Push Changes
+      - name: Commit and Push Changes (Conflict-Free)
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
+          
+          # Store current changes
           git add docs/data/
           
-          # Check if there are changes to commit
+          # Check if there are changes
           if git diff --quiet && git diff --staged --quiet; then
             echo "No changes to commit"
             exit 0
           fi
           
-          git commit -m "📈 Historical data: $(date -u '+%Y-%m-%dT%H:%MZ')"
+          # Create a temporary branch with our changes
+          git checkout -b temp-branch
+          git commit -m "📈 Data update: $(date -u '+%Y-%m-%dT%H:%MZ')"
           
-          # Try to push with retry mechanism
-          MAX_RETRIES=3
-          RETRY_COUNT=0
+          # Go back to main and fetch latest
+          git checkout main
+          git fetch origin main
           
-          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            # Try to pull with rebase first
-            if git pull --rebase origin main; then
-              # If pull and rebase successful, try to push
-              if git push origin main; then
-                echo "✅ Successfully pushed changes"
-                exit 0
-              fi
-            fi
-            
-            # If we get here, something failed
-            RETRY_COUNT=$((RETRY_COUNT+1))
-            echo "⚠️ Attempt $RETRY_COUNT failed, retrying in 5 seconds..."
-            sleep 5
-            
-            # Fetch latest changes and reset if needed
-            git fetch origin main
-          done
+          # Try to fast-forward, if not possible, do a merge with strategy
+          if git merge --ff-only origin/main; then
+            echo "Fast-forward successful"
+          else
+            echo "Cannot fast-forward, performing merge with preference for remote"
+            git merge origin/main --no-ff --strategy-option theirs -m "Merge remote changes"
+          fi
           
-          # If all retries failed, try force push as last resort (but preserve remote changes)
-          echo "⚠️ All retries failed, attempting merge strategy..."
-          git pull --no-rebase origin main || true
-          git push origin main || {
-            echo "❌ Failed to push changes"
-            exit 1
+          # Apply our changes from temp branch
+          git cherry-pick temp-branch --strategy-option theirs || {
+            echo "Cherry-pick failed, manually resolving..."
+            git checkout temp-branch -- docs/data/
+            git add docs/data/
+            git commit -m "Apply data updates"
           }
+          
+          # Push with lease to avoid overwriting
+          git push --force-with-lease origin main || {
+            echo "Push failed, retrying with force after fetch..."
+            git fetch origin main
+            git reset --hard origin/main
+            git cherry-pick temp-branch --strategy-option theirs
+            git push origin main
+          }
+          
+          # Clean up
+          git branch -D temp-branch || true
+          
+          echo "✅ Successfully updated data"
