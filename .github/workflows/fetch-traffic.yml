@@ -46,7 +46,6 @@ jobs:
           import json
           import time
           from datetime import datetime, timezone
-          from collections import defaultdict
 
           g = Github(os.environ['GH_TOKEN'])
           data_dir = os.environ['DATA_DIR']
@@ -55,6 +54,8 @@ jobs:
               # Normalize timestamps
               existing_timestamps = set()
               existing_data = {item['timestamp']: item for item in existing[key]}
+              
+              # Build timestamp set from existing data
               for item in existing[key]:
                   ts = item['timestamp']
                   if ts.endswith('+00:00'):
@@ -62,71 +63,95 @@ jobs:
                   elif not (ts.endswith('Z') and 'T' in ts):
                       ts = ts.replace('T', 'T') + 'Z'
                   existing_timestamps.add(ts)
-    
+              
+              # Start with existing data
               merged = existing[key].copy()
+              
+              # Merge new data
               for item in new[key]:
                   ts = item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+                  
                   if ts in existing_timestamps:
+                      # Update if new data has higher counts
                       existing_item = existing_data.get(ts)
                       if existing_item and (item.count > existing_item['count'] or item.uniques > existing_item['uniques']):
+                          # Remove old
                           merged = [x for x in merged if x['timestamp'] != ts]
+                          # Add new
                           merged.append({
                               "timestamp": ts,
                               "count": item.count,
                               "uniques": item.uniques
                           })
                   else:
+                      # Brand new timestamp
                       merged.append({
                           "timestamp": ts,
                           "count": item.count,
                           "uniques": item.uniques
                       })
-    
+              
+              # Sort chronologically
               return sorted(merged, key=lambda x: x['timestamp'])
 
           try:
               repos = list(g.get_user().get_repos(type='all'))
               repo_index_path = f"{data_dir}/repo-info.json"
               
-              # Read existing repo index
+              # Read existing repo index with graceful handling
               existing_repo_index = []
               if os.path.exists(repo_index_path):
-                  with open(repo_index_path, 'r') as f:
-                      existing_repo_index = json.load(f)
-
-              # Create a dictionary for faster lookup
-              existing_repo_dict = {repo['name']: repo for repo in existing_repo_index}
-              updated_repo_dict = {}
+                  try:
+                      with open(repo_index_path, 'r') as f:
+                          existing_repo_index = json.load(f)
+                  except:
+                      print("⚠️ Could not read existing repo index, starting fresh")
+                      existing_repo_index = []
+              
+              # Create dictionary for quick lookup
+              existing_dict = {repo['name']: repo for repo in existing_repo_index}
+              updated_repos = []
 
               for repo in repos:
                   repo_dir = f"{data_dir}/repos/{repo.name}"
                   os.makedirs(repo_dir, exist_ok=True)
                   
                   try:
-                      # Views data collection
+                      # === VIEWS DATA ===
                       views_file = f"{repo_dir}/views.json"
                       views_data = {"views": [], "count": 0, "uniques": 0}
                       
                       if os.path.exists(views_file):
-                          with open(views_file, 'r') as f:
-                              views_data = json.load(f)
+                          try:
+                              with open(views_file, 'r') as f:
+                                  views_data = json.load(f)
+                          except:
+                              print(f"⚠️ Could not read views for {repo.name}, starting fresh")
                       
+                      # Get new views from API (last 14 days only!)
                       new_views = repo.get_views_traffic()
+                      
+                      # Merge old + new
                       views_data['views'] = merge_data(views_data, new_views, 'views')
                       views_data['count'] = sum(v['count'] for v in views_data['views'])
                       views_data['uniques'] = sum(v['uniques'] for v in views_data['views'])
                       
+                      # Save
                       with open(views_file, 'w') as f:
                           json.dump(views_data, f, indent=2)
                       
-                      # Clones data collection
+                      # === CLONES DATA ===
                       clones_file = f"{repo_dir}/clones.json"
                       clones_data = {"clones": [], "count": 0, "uniques": 0}
                       
                       if os.path.exists(clones_file):
-                          with open(clones_file, 'r') as f:
-                              clones_data = json.load(f)
+                          try:
+                              with open(clones_file, 'r') as f:
+                                  clones_data = json.load(f)
+                          except:
+                              print(f"⚠️ Could not read clones for {repo.name}, starting fresh")
                       
+                      # Get new clones from API with retry
                       for attempt in range(3):
                           try:
                               new_clones = repo.get_clones_traffic()
@@ -135,15 +160,19 @@ jobs:
                               clones_data['uniques'] = sum(c['uniques'] for c in clones_data['clones'])
                               break
                           except Exception as e:
-                              if attempt == 2: print(f"❌ Clone data could not be retrieved: {repo.name}")
-                              time.sleep(2)
-                          
+                              if attempt == 2:
+                                  print(f"❌ Clone data could not be retrieved: {repo.name}")
+                              else:
+                                  time.sleep(2)
+                      
+                      # Save
                       with open(clones_file, 'w') as f:
                           json.dump(clones_data, f, indent=2)
 
-                      # Update repo info
-                      existing_entry = existing_repo_dict.get(repo.name, {})
+                      # === REPO INFO ===
+                      existing_data = existing_dict.get(repo.name, {})
                       
+                      # Create new entry with all fields
                       new_entry = {
                           "name": repo.name,
                           "full_name": repo.full_name,
@@ -153,78 +182,86 @@ jobs:
                           "updated_at": datetime.now(timezone.utc).isoformat()
                       }
                       
-                      # Merge with existing data
-                      updated_repo_dict[repo.name] = {**existing_entry, **new_entry}
-
-                      time.sleep(1.2)  # Rate limit protection
+                      # Preserve any existing custom fields (backward compatibility)
+                      for key, value in existing_data.items():
+                          if key not in new_entry:
+                              new_entry[key] = value
+                      
+                      updated_repos.append(new_entry)
+                      
+                      # Rate limit protection
+                      time.sleep(1.2)
                       
                   except Exception as e:
                       print(f"⚠️ {repo.name} could not be processed: {str(e)}")
-                      # Keep existing data if processing failed
-                      if repo.name in existing_repo_dict:
-                          updated_repo_dict[repo.name] = existing_repo_dict[repo.name]
+                      # Keep existing data if available
+                      if repo.name in existing_dict:
+                          updated_repos.append(existing_dict[repo.name])
                       continue
 
-              # Write final repo index (sorted for consistency)
-              final_repo_list = sorted(updated_repo_dict.values(), key=lambda x: x['name'])
-              with open(repo_index_path, 'w') as f:
-                  json.dump(final_repo_list, f, indent=2)
+              # Sort repos by name for consistency
+              updated_repos.sort(key=lambda x: x['name'])
               
-              print(f"✅ {len(final_repo_list)} repos processed")
+              # Write final repo index
+              with open(repo_index_path, 'w') as f:
+                  json.dump(updated_repos, f, indent=2)
+              
+              print(f"✅ {len(updated_repos)} repos processed successfully")
+              print(f"📊 Total views/clones data preserved historically")
 
           except Exception as e:
               print(f"🔥 Critical error: {str(e)}")
               raise
           EOF
 
-      - name: Commit and Push Changes (Conflict-Free)
+      - name: Commit and Push Changes (RETRY + CONFLICT RESOLUTION)
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
-          # Store current changes
+          # Add all data files
           git add docs/data/
           
-          # Check if there are changes
+          # Check if there are actual changes
           if git diff --quiet && git diff --staged --quiet; then
-            echo "No changes to commit"
+            echo "ℹ️ No changes to commit"
             exit 0
           fi
           
-          # Create a temporary branch with our changes
-          git checkout -b temp-branch
-          git commit -m "📈 Data update: $(date -u '+%Y-%m-%dT%H:%MZ')"
+          # Create commit
+          git commit -m "📈 Historical data accumulation: $(date -u '+%Y-%m-%dT%H:%MZ')"
           
-          # Go back to main and fetch latest
-          git checkout main
-          git fetch origin main
-          
-          # Try to fast-forward, if not possible, do a merge with strategy
-          if git merge --ff-only origin/main; then
-            echo "Fast-forward successful"
-          else
-            echo "Cannot fast-forward, performing merge with preference for remote"
-            git merge origin/main --no-ff --strategy-option theirs -m "Merge remote changes"
-          fi
-          
-          # Apply our changes from temp branch
-          git cherry-pick temp-branch --strategy-option theirs || {
-            echo "Cherry-pick failed, manually resolving..."
-            git checkout temp-branch -- docs/data/
-            git add docs/data/
-            git commit -m "Apply data updates"
-          }
-          
-          # Push with lease to avoid overwriting
-          git push --force-with-lease origin main || {
-            echo "Push failed, retrying with force after fetch..."
+          # RETRY LOOP - 5 attempts with exponential backoff
+          MAX_RETRIES=5
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "🔄 Push attempt $i of $MAX_RETRIES..."
+            
+            # Try to pull latest changes (with our data preserved)
+            if git pull --rebase origin main; then
+              # If pull successful, try to push
+              if git push origin main; then
+                echo "✅ Successfully pushed after $i attempts"
+                exit 0
+              fi
+            fi
+            
+            # If we get here, something failed
+            if [ $i -eq $MAX_RETRIES ]; then
+              echo "❌ All push attempts failed"
+              exit 1
+            fi
+            
+            # Wait with exponential backoff
+            WAIT_TIME=$((2 ** i))
+            echo "⚠️ Attempt $i failed, waiting ${WAIT_TIME}s before retry..."
+            sleep $WAIT_TIME
+            
+            # Fetch latest and reset
             git fetch origin main
-            git reset --hard origin/main
-            git cherry-pick temp-branch --strategy-option theirs
-            git push origin main
-          }
-          
-          # Clean up
-          git branch -D temp-branch || true
-          
-          echo "✅ Successfully updated data"
+            
+            # Try to rebase with ours strategy (prefer our changes on conflict)
+            git rebase --strategy-option ours origin/main || {
+              echo "Rebase failed, trying merge strategy..."
+              git merge --strategy-option ours origin/main --no-ff -m "Merge remote changes"
+            }
+          done
