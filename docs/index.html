@@ -1,74 +1,74 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en"> <!-- Default language changed to English -->
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>GitHub Depo Trafik Görüntüleyici</title>
-	<!-- Chart.js 3.9.1 sürümü -->
-	<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@latest/build/styles/github.min.css">
-	<link rel="stylesheet" href="styles/style.min.css">
-	<script data-name="BMC-Widget" 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Repository Traffic Viewer</title>
+    <!-- Chart.js 3.9.1 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@latest/build/styles/github.min.css">
+    <link rel="stylesheet" href="styles/style.min.css">
+    <script data-name="BMC-Widget" 
         data-cfasync="false" 
         src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" 
         data-id="metatronslove" 
         data-description="Support me on Buy me a coffee!" 
-        data-message="Projelerimi beğeniyor musun? Bana kahve ısmarla!" 
+        data-message="Like my projects? Buy me a coffee!" 
         data-color="#FFDD00" 
         data-position="right" 
         data-x_margin="18" 
         data-y_margin="18">
-	</script>
-	<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@latest/build/highlight.min.js"></script>
+    </script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@latest/build/highlight.min.js"></script>
 </head>
 
 <body>
-	<div class="language-switcher">
-		<button class="lang-btn" onclick="changeLanguage('tr')">TR</button>
-		<button class="lang-btn" onclick="changeLanguage('en')">EN</button>
-		<button class="lang-btn" onclick="toggleTheme()" style="margin-left: 10px;">
-			<span data-theme-icon="dark">🌙</span>
-			<span data-theme-icon="light">☀️</span>
-		</button>
-	</div>
-	<div class="time-range-selector" id="time-range-container" style="display:none;">
-		<label data-translate="timeRange"> Zaman Aralığı: <select id="time-range">
-				<option value="1d">Son 1 Gün</option>
-				<option value="7d">Son 1 Hafta</option>
-				<option value="30d" selected>Son 1 Ay</option>
-				<option value="90d">Son 3 Ay</option>
-				<option value="180d">Son 6 Ay</option>
-				<option value="365d">Son 1 Yıl</option>
-				<option value="all">Tüm Zamanlar</option>
-			</select>
-		</label>
-	</div>
-	<div class="per-page-selector" id="per-page-container" style="display:none;">
-		<label data-translate="perPage">
-			<select id="per-page">
-				<option value="10">10</option>
-				<option value="25" selected>25</option>
-				<option value="50">50</option>
-				<option value="100">100</option>
-			</select>
-		</label>
-	</div>
-	<h1 data-translate="title">GitHub Depo Trafik Verileri</h1>
-	<div id="info-container"></div>
-	<div id="loading">GitHub oturumunuz kontrol ediliyor...</div>
-	<div id="charts-container"></div>
-	<div class="pagination" id="pagination" style="display:none;"></div>
-	<script src="scripts/script.min.js"></script>
-	<center>
-		<p></p>
-		<p><img src="https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white" title="attributes are great">&nbsp;<img src="https://img.shields.io/badge/CSS3-1572B6?style=flat&logo=css3&logoColor=white" title="style is more than make up">&nbsp;<img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black" title="live Frenkanstein!"></p>
-		<p><a href="http://one.fanclub.rocks/" target="_blank" style="display: inline-flex; align-items: center; padding: 8px 16px; background: linear-gradient(135deg, #ff3366, #ff6633); color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 600; font-size: 15px; text-decoration: none; border-radius: 6px; box-shadow: 0 3px 6px rgba(0,0,0,0.16); transition: all 0.3s ease; letter-spacing: 0.5px;"><svg style="width: 16px; height: 16px; margin-right: 8px; fill: white;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-					<path d="M19 2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm0 16H5V4h14v14zM7 6h10v2H7zm0 4h10v2H7zm0 4h7v2H7z" />
-				</svg>One Blog</a>
-		</p>
-	</center>
+    <div class="language-switcher">
+        <button class="lang-btn" onclick="changeLanguage('en')">EN</button>
+        <button class="lang-btn" onclick="changeLanguage('tr')">TR</button>
+        <button class="lang-btn" onclick="toggleTheme()" style="margin-left: 10px;">
+            <span data-theme-icon="dark">🌙</span>
+            <span data-theme-icon="light">☀️</span>
+        </button>
+    </div>
+    <div class="time-range-selector" id="time-range-container" style="display:none;">
+        <label data-translate="timeRange"> Time Range: <select id="time-range">
+                <option value="1d">Last Day</option>
+                <option value="7d">Last Week</option>
+                <option value="30d" selected>Last Month</option>
+                <option value="90d">Last 3 Months</option>
+                <option value="180d">Last 6 Months</option>
+                <option value="365d">Last Year</option>
+                <option value="all">All Time</option>
+            </select>
+        </label>
+    </div>
+    <div class="per-page-selector" id="per-page-container" style="display:none;">
+        <label data-translate="perPage">
+            <select id="per-page">
+                <option value="10">10</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </label>
+    </div>
+    <h1 data-translate="title">GitHub Repository Traffic Stats</h1>
+    <div id="info-container"></div>
+    <div id="loading">Checking GitHub session...</div>
+    <div id="charts-container"></div>
+    <div class="pagination" id="pagination" style="display:none;"></div>
+    <script src="scripts/script.js"></script>
+    <center>
+        <p></p>
+        <p><img src="https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white" title="attributes are great">&nbsp;<img src="https://img.shields.io/badge/CSS3-1572B6?style=flat&logo=css3&logoColor=white" title="style is more than make up">&nbsp;<img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black" title="live Frenkanstein!"></p>
+        <p><a href="http://one.fanclub.rocks/" target="_blank" style="display: inline-flex; align-items: center; padding: 8px 16px; background: linear-gradient(135deg, #ff3366, #ff6633); color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 600; font-size: 15px; text-decoration: none; border-radius: 6px; box-shadow: 0 3px 6px rgba(0,0,0,0.16); transition: all 0.3s ease; letter-spacing: 0.5px;"><svg style="width: 16px; height: 16px; margin-right: 8px; fill: white;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm0 16H5V4h14v14zM7 6h10v2H7zm0 4h10v2H7zm0 4h7v2H7z" />
+                </svg>One Blog</a>
+        </p>
+    </center>
 </body>
 
 </html>
