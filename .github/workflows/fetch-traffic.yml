@@ -66,7 +66,7 @@ jobs:
     
               merged = existing[key].copy()  # Copy existing data
               for item in new[key]:
-                  ts = item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT Above:%M:%SZ')
+                  ts = item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
                   # If same timestamp exists, update if count/uniques are larger
                   if ts in existing_timestamps:
                       existing_item = existing_data.get(ts)
@@ -138,7 +138,7 @@ jobs:
                           except Exception as e:
                               if attempt == 2: print(f"❌ Clone data could not be retrieved: {repo.name}")
                               time.sleep(2)
-                      
+                          
                       with open(clones_file, 'w') as f:
                           json.dump(clones_data, f, indent=2)
 
@@ -187,6 +187,42 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add docs/data/
-          git commit -m "📈 Historical data accumulation: $(date -u '+%Y-%m-%dT%H:%MZ')" || echo "No changes"
-          git pull --rebase origin main
-          git push origin main
+          
+          # Check if there are changes to commit
+          if git diff --quiet && git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          
+          git commit -m "📈 Historical data: $(date -u '+%Y-%m-%dT%H:%MZ')"
+          
+          # Try to push with retry mechanism
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            # Try to pull with rebase first
+            if git pull --rebase origin main; then
+              # If pull and rebase successful, try to push
+              if git push origin main; then
+                echo "✅ Successfully pushed changes"
+                exit 0
+              fi
+            fi
+            
+            # If we get here, something failed
+            RETRY_COUNT=$((RETRY_COUNT+1))
+            echo "⚠️ Attempt $RETRY_COUNT failed, retrying in 5 seconds..."
+            sleep 5
+            
+            # Fetch latest changes and reset if needed
+            git fetch origin main
+          done
+          
+          # If all retries failed, try force push as last resort (but preserve remote changes)
+          echo "⚠️ All retries failed, attempting merge strategy..."
+          git pull --no-rebase origin main || true
+          git push origin main || {
+            echo "❌ Failed to push changes"
+            exit 1
+          }
