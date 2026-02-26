@@ -521,11 +521,16 @@
       "uniques": 2
     },
     {
+      "timestamp": "2026-02-24T Above:00:00Z",
+      "count": 5,
+      "uniques": 5
+    },
+    {
       "timestamp": "2026-02-24T00:00:00Z",
       "count": 5,
       "uniques": 5
     }
   ],
-  "count": 60,
-  "uniques": 57
+  "count": 65,
+  "uniques": 62
 }
