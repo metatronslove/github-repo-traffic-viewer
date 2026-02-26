@@ -51,48 +51,52 @@ jobs:
           data_dir = os.environ['DATA_DIR']
           
           def merge_data(existing, new, key):
-              # Normalize timestamps
+              # Normalize timestamps and create lookup dictionaries
               existing_timestamps = set()
-              existing_data = {item['timestamp']: item for item in existing[key]}
+              existing_by_timestamp = {}  # Fixed: proper dictionary for lookup
               
-              # Build timestamp set from existing data
+              # Process existing items
               for item in existing[key]:
                   ts = item['timestamp']
+                  # Normalize timestamp for comparison
                   if ts.endswith('+00:00'):
                       ts = ts.replace('+00:00', 'Z')
                   elif not (ts.endswith('Z') and 'T' in ts):
                       ts = ts.replace('T', 'T') + 'Z'
-                  existing_timestamps.add(ts)
+                  
+                  normalized_ts = ts
+                  existing_timestamps.add(normalized_ts)
+                  existing_by_timestamp[normalized_ts] = item
               
-              # Start with existing data
-              merged = existing[key].copy()
+              # Start with all existing items
+              merged_dict = {item['timestamp']: item for item in existing[key]}
               
               # Merge new data
               for item in new[key]:
                   ts = item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+                  normalized_new_ts = ts
                   
-                  if ts in existing_timestamps:
-                      # Update if new data has higher counts
-                      existing_item = existing_data.get(ts)
+                  if normalized_new_ts in existing_timestamps:
+                      # Check if we need to update
+                      existing_item = existing_by_timestamp.get(normalized_new_ts)
                       if existing_item and (item.count > existing_item['count'] or item.uniques > existing_item['uniques']):
-                          # Remove old
-                          merged = [x for x in merged if x['timestamp'] != ts]
-                          # Add new
-                          merged.append({
+                          # Update with higher values
+                          merged_dict[ts] = {
                               "timestamp": ts,
                               "count": item.count,
                               "uniques": item.uniques
-                          })
+                          }
                   else:
                       # Brand new timestamp
-                      merged.append({
+                      merged_dict[ts] = {
                           "timestamp": ts,
                           "count": item.count,
                           "uniques": item.uniques
-                      })
+                      }
               
-              # Sort chronologically
-              return sorted(merged, key=lambda x: x['timestamp'])
+              # Convert back to list and sort
+              merged_list = list(merged_dict.values())
+              return sorted(merged_list, key=lambda x: x['timestamp'])
 
           try:
               repos = list(g.get_user().get_repos(type='all'))
@@ -128,10 +132,10 @@ jobs:
                           except:
                               print(f"⚠️ Could not read views for {repo.name}, starting fresh")
                       
-                      # Get new views from API (last 14 days only!)
+                      # Get new views from API
                       new_views = repo.get_views_traffic()
                       
-                      # Merge old + new
+                      # Merge old + new (fixed merge function)
                       views_data['views'] = merge_data(views_data, new_views, 'views')
                       views_data['count'] = sum(v['count'] for v in views_data['views'])
                       views_data['uniques'] = sum(v['uniques'] for v in views_data['views'])
@@ -182,7 +186,7 @@ jobs:
                           "updated_at": datetime.now(timezone.utc).isoformat()
                       }
                       
-                      # Preserve any existing custom fields (backward compatibility)
+                      # Preserve any existing custom fields
                       for key, value in existing_data.items():
                           if key not in new_entry:
                               new_entry[key] = value
@@ -214,52 +218,41 @@ jobs:
               raise
           EOF
 
-      - name: Commit and Push Changes (RETRY + CONFLICT RESOLUTION)
+      - name: Commit and Push Changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
-          # Add all data files
           git add docs/data/
           
-          # Check if there are actual changes
           if git diff --quiet && git diff --staged --quiet; then
             echo "ℹ️ No changes to commit"
             exit 0
           fi
           
-          # Create commit
           git commit -m "📈 Historical data accumulation: $(date -u '+%Y-%m-%dT%H:%MZ')"
           
-          # RETRY LOOP - 5 attempts with exponential backoff
           MAX_RETRIES=5
           for i in $(seq 1 $MAX_RETRIES); do
             echo "🔄 Push attempt $i of $MAX_RETRIES..."
             
-            # Try to pull latest changes (with our data preserved)
             if git pull --rebase origin main; then
-              # If pull successful, try to push
               if git push origin main; then
                 echo "✅ Successfully pushed after $i attempts"
                 exit 0
               fi
             fi
             
-            # If we get here, something failed
             if [ $i -eq $MAX_RETRIES ]; then
               echo "❌ All push attempts failed"
               exit 1
             fi
             
-            # Wait with exponential backoff
             WAIT_TIME=$((2 ** i))
             echo "⚠️ Attempt $i failed, waiting ${WAIT_TIME}s before retry..."
             sleep $WAIT_TIME
             
-            # Fetch latest and reset
             git fetch origin main
-            
-            # Try to rebase with ours strategy (prefer our changes on conflict)
             git rebase --strategy-option ours origin/main || {
               echo "Rebase failed, trying merge strategy..."
               git merge --strategy-option ours origin/main --no-ff -m "Merge remote changes"
