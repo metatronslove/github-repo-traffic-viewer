@@ -63,7 +63,7 @@ jobs:
                       ts = ts.replace('T', 'T') + 'Z'
                   existing_timestamps.add(ts)
     
-              merged = existing[key].copy()
+              merged = existing[key].copy()  # Mevcut verileri kopyala
               for item in new[key]:
                   ts = item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
                   # Aynı zaman damgası varsa, count ve uniques daha büyükse güncelle
@@ -186,7 +186,7 @@ jobs:
               raise
           EOF
 
-      - name: Commit and Push Changes (CONFLICT-FREE)
+      - name: Commit and Push Changes (FIXED CONFLICT RESOLUTION)
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
@@ -217,20 +217,27 @@ jobs:
             git fetch origin main
             
             # Try to pull with merge strategy (keep our changes on conflict)
-            if git pull --no-rebase -Xours origin main; then
+            if git pull --no-rebase -Xours origin main 2>/dev/null; then
               echo "✅ Pull successful"
             else
-              echo "⚠️ Pull failed, resolving conflicts..."
+              echo "⚠️ Pull failed, checking status..."
               
               # If there are conflicts, resolve them by keeping our version
-              git status | grep "both modified" | awk '{print $2}' | while read file; do
-                echo "Resolving $file: keeping our version"
-                git checkout --ours "$file"
-                git add "$file"
-              done
-              
-              # Commit the merge
-              git commit --no-edit || true
+              if git status | grep -q "both modified"; then
+                echo "🔧 Merge conflicts detected, auto-resolving with --ours..."
+                git status --porcelain | grep "UU" | awk '{print $2}' | while read file; do
+                  echo "Resolving $file: keeping our version"
+                  git checkout --ours "$file"
+                  git add "$file"
+                done
+                
+                # Commit the merge
+                git commit --no-edit
+              else
+                # If no conflicts but pull failed, try force pull
+                git fetch origin main
+                git reset --hard origin/main
+              fi
             fi
             
             # Try to push
