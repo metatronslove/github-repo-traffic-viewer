@@ -63,9 +63,11 @@ jobs:
                       ts = ts.replace('T', 'T') + 'Z'
                   existing_timestamps.add(ts)
     
-              merged = existing[key].copy()  # Mevcut verileri kopyala
+              merged = existing[key].copy()
               for item in new[key]:
-                  ts = item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+                  # >>> KRİTİK: "Above" İŞARETÇİSİ GERİ GETİRİLDİ <<<
+                  ts = item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT Above:%M:%SZ')
+                  
                   # Aynı zaman damgası varsa, count ve uniques daha büyükse güncelle
                   if ts in existing_timestamps:
                       existing_item = existing_data.get(ts)
@@ -186,73 +188,33 @@ jobs:
               raise
           EOF
 
-      - name: Commit and Push Changes (FIXED CONFLICT RESOLUTION)
+      - name: Commit and Push Changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
-          # Add all data files
           git add docs/data/
           
-          # Check if there are actual changes
           if git diff --quiet && git diff --staged --quiet; then
             echo "ℹ️ No changes to commit"
             exit 0
           fi
           
-          # Create commit
           git commit -m "📈 Historical data accumulation: $(date -u '+%Y-%m-%dT%H:%MZ')"
           
-          # RETRY LOOP - 5 attempts with exponential backoff
+          # Retry loop with conflict resolution
           MAX_RETRIES=5
           for i in $(seq 1 $MAX_RETRIES); do
             echo "🔄 Push attempt $i of $MAX_RETRIES..."
             
-            # Clean up any existing merge/rebase state
-            git merge --abort 2>/dev/null || true
-            git rebase --abort 2>/dev/null || true
-            rm -rf .git/rebase-merge 2>/dev/null || true
+            git pull --rebase origin main && git push origin main && exit 0
             
-            # Fetch latest changes
-            git fetch origin main
-            
-            # Try to pull with merge strategy (keep our changes on conflict)
-            if git pull --no-rebase -Xours origin main 2>/dev/null; then
-              echo "✅ Pull successful"
-            else
-              echo "⚠️ Pull failed, checking status..."
-              
-              # If there are conflicts, resolve them by keeping our version
-              if git status | grep -q "both modified"; then
-                echo "🔧 Merge conflicts detected, auto-resolving with --ours..."
-                git status --porcelain | grep "UU" | awk '{print $2}' | while read file; do
-                  echo "Resolving $file: keeping our version"
-                  git checkout --ours "$file"
-                  git add "$file"
-                done
-                
-                # Commit the merge
-                git commit --no-edit
-              else
-                # If no conflicts but pull failed, try force pull
-                git fetch origin main
-                git reset --hard origin/main
-              fi
-            fi
-            
-            # Try to push
-            if git push origin main; then
-              echo "✅ Successfully pushed after $i attempts"
-              exit 0
-            fi
-            
-            # If push failed, wait and retry
             if [ $i -eq $MAX_RETRIES ]; then
               echo "❌ All push attempts failed"
               exit 1
             fi
             
             WAIT_TIME=$((2 ** i))
-            echo "⚠️ Attempt $i failed, waiting ${WAIT_TIME}s before retry..."
+            echo "⚠️ Attempt $i failed, waiting ${WAIT_TIME}s..."
             sleep $WAIT_TIME
           done
