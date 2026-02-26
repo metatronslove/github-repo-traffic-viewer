@@ -46,49 +46,71 @@ jobs:
           import json
           import time
           from datetime import datetime, timezone
-          from collections import defaultdict
 
           g = Github(os.environ['GH_TOKEN'])
           data_dir = os.environ['DATA_DIR']
           
           def merge_data(existing, new, key):
-              # Normalize timestamps by converting to datetime objects for comparison
+              # Mevcut timestamp'leri normalize et ve set oluştur
               existing_timestamps = set()
-              existing_data = {item['timestamp']: item for item in existing[key]}
               for item in existing[key]:
                   ts = item['timestamp']
-                  if ts.endswith('+00:00'):
-                      ts = ts.replace('+00:00', 'Z')
-                  elif not (ts.endswith('Z') and 'T' in ts):
-                      ts = ts.replace('T', 'T') + 'Z'
+                  # Z ile bitiyorsa olduğu gibi kullan, değilse ekle
+                  if not ts.endswith('Z'):
+                      ts = ts + 'Z'
                   existing_timestamps.add(ts)
-    
+              
+              # Mevcut verileri timestamp'e göre indexle (orijinal timestamp'leri koru)
+              existing_by_timestamp = {}
+              for item in existing[key]:
+                  ts_key = item['timestamp']
+                  if not ts_key.endswith('Z'):
+                      ts_key = ts_key + 'Z'
+                  existing_by_timestamp[ts_key] = item
+              
+              # Yeni verileri ekle/güncelle
               merged = existing[key].copy()
+              
               for item in new[key]:
-                  # >>> KRİTİK: "Above" İŞARETÇİSİ GERİ GETİRİLDİ <<<
-                  ts = item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT Above:%M:%SZ')
+                  # Yeni timestamp'i oluştur
+                  new_ts = item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
                   
-                  # Aynı zaman damgası varsa, count ve uniques daha büyükse güncelle
-                  if ts in existing_timestamps:
-                      existing_item = existing_data.get(ts)
-                      if existing_item and (item.count > existing_item['count'] or item.uniques > existing_item['uniques']):
-                          # Eski veriyi listeden çıkar
-                          merged = [x for x in merged if x['timestamp'] != ts]
-                          # Yeni veriyi ekle
-                          merged.append({
-                              "timestamp": ts,
-                              "count": item.count,
-                              "uniques": item.uniques
-                          })
+                  # Bu timestamp daha önce var mı kontrol et
+                  if new_ts in existing_timestamps:
+                      # Varolan veriyi al
+                      existing_item = existing_by_timestamp.get(new_ts)
+                      if existing_item:
+                          # Eğer yeni veri daha büyükse güncelle
+                          if item.count > existing_item['count'] or item.uniques > existing_item['uniques']:
+                              # Eski veriyi çıkar
+                              merged = [x for x in merged if x['timestamp'] != existing_item['timestamp']]
+                              # Yeni veriyi ekle
+                              merged.append({
+                                  "timestamp": new_ts,
+                                  "count": item.count,
+                                  "uniques": item.uniques
+                              })
+                              print(f"  ↻ Güncellendi: {new_ts} (count: {item.count}, uniques: {item.uniques})")
+                      else:
+                          # Bu durum teorikte olmamalı ama güvenlik için
+                          print(f"  ⚠️ Timestamp set'te var ama veri bulunamadı: {new_ts}")
                   else:
-                      # Yeni zaman damgasıysa doğrudan ekle
+                      # Yeni timestamp - direkt ekle
                       merged.append({
-                          "timestamp": ts,
+                          "timestamp": new_ts,
                           "count": item.count,
                           "uniques": item.uniques
                       })
-    
-              return sorted(merged, key=lambda x: x['timestamp'])
+                      print(f"  ✚ Eklendi: {new_ts} (count: {item.count}, uniques: {item.uniques})")
+              
+              # Timestamp'e göre sırala
+              merged.sort(key=lambda x: x['timestamp'])
+              
+              # Toplamları güncelle
+              total_count = sum(item['count'] for item in merged)
+              total_uniques = sum(item['uniques'] for item in merged)
+              
+              return merged, total_count, total_uniques
 
           try:
               repos = list(g.get_user().get_repos(type='all'))
@@ -100,54 +122,104 @@ jobs:
                   with open(repo_index_path, 'r') as f:
                       existing_repo_index = json.load(f)
 
-              # Create dictionary for quick lookup
+              # Hızlı erişim için dictionary oluştur
               existing_dict = {repo['name']: repo for repo in existing_repo_index}
               updated_repos = []
+              
+              processed_count = 0
+              error_count = 0
+              updated_count = 0
+              new_count = 0
 
               for repo in repos:
+                  if repo.name.startswith('.'):  # Hidden repo'ları atla
+                      continue
+                      
                   repo_dir = f"{data_dir}/repos/{repo.name}"
                   os.makedirs(repo_dir, exist_ok=True)
                   
                   try:
-                      # Views verilerini biriktir
+                      print(f"\n📦 İşleniyor: {repo.name}")
+                      repo_updated = False
+                      repo_new = False
+                      
+                      # Views verilerini işle
                       views_file = f"{repo_dir}/views.json"
                       views_data = {"views": [], "count": 0, "uniques": 0}
                       
                       if os.path.exists(views_file):
                           with open(views_file, 'r') as f:
                               views_data = json.load(f)
+                          print(f"  📊 Mevcut views: {len(views_data['views'])} kayıt")
                       
-                      new_views = repo.get_views_traffic()
-                      views_data['views'] = merge_data(views_data, new_views, 'views')
-                      views_data['count'] = sum(v['count'] for v in views_data['views'])
-                      views_data['uniques'] = sum(v['uniques'] for v in views_data['views'])
+                      try:
+                          new_views = repo.get_views_traffic()
+                          if new_views and hasattr(new_views, 'views') and new_views.views:
+                              print(f"  📈 Yeni views: {len(new_views.views)} kayıt")
+                              merged_views, total_count, total_uniques = merge_data(views_data, new_views, 'views')
+                              
+                              # Değişiklik var mı kontrol et
+                              if len(merged_views) != len(views_data['views']):
+                                  repo_new = True
+                              else:
+                                  # İçerik değişmiş olabilir, detaylı kontrol
+                                  for i, item in enumerate(merged_views):
+                                      if i < len(views_data['views']):
+                                          old_item = views_data['views'][i]
+                                          if item['count'] != old_item['count'] or item['uniques'] != old_item['uniques']:
+                                              repo_updated = True
+                                              break
+                              
+                              views_data['views'] = merged_views
+                              views_data['count'] = total_count
+                              views_data['uniques'] = total_uniques
+                              
+                              with open(views_file, 'w') as f:
+                                  json.dump(views_data, f, indent=2)
+                      except Exception as e:
+                          print(f"  ⚠️ Views verisi alınamadı: {str(e)}")
                       
-                      with open(views_file, 'w') as f:
-                          json.dump(views_data, f, indent=2)
-                      
-                      # Clones verilerini biriktir (3 deneme)
+                      # Clones verilerini işle (3 deneme)
                       clones_file = f"{repo_dir}/clones.json"
                       clones_data = {"clones": [], "count": 0, "uniques": 0}
                       
                       if os.path.exists(clones_file):
                           with open(clones_file, 'r') as f:
                               clones_data = json.load(f)
+                          print(f"  📊 Mevcut clones: {len(clones_data['clones'])} kayıt")
                       
                       for attempt in range(3):
                           try:
                               new_clones = repo.get_clones_traffic()
-                              clones_data['clones'] = merge_data(clones_data, new_clones, 'clones')
-                              clones_data['count'] = sum(c['count'] for c in clones_data['clones'])
-                              clones_data['uniques'] = sum(c['uniques'] for c in clones_data['clones'])
+                              if new_clones and hasattr(new_clones, 'clones') and new_clones.clones:
+                                  print(f"  📈 Yeni clones: {len(new_clones.clones)} kayıt")
+                                  merged_clones, total_count, total_uniques = merge_data(clones_data, new_clones, 'clones')
+                                  
+                                  # Değişiklik var mı kontrol et
+                                  if len(merged_clones) != len(clones_data['clones']):
+                                      repo_new = True
+                                  else:
+                                      for i, item in enumerate(merged_clones):
+                                          if i < len(clones_data['clones']):
+                                              old_item = clones_data['clones'][i]
+                                              if item['count'] != old_item['count'] or item['uniques'] != old_item['uniques']:
+                                                  repo_updated = True
+                                                  break
+                                  
+                                  clones_data['clones'] = merged_clones
+                                  clones_data['count'] = total_count
+                                  clones_data['uniques'] = total_uniques
+                                  
+                                  with open(clones_file, 'w') as f:
+                                      json.dump(clones_data, f, indent=2)
                               break
                           except Exception as e:
-                              if attempt == 2: print(f"❌ Clone verisi alınamadı: {repo.name}")
-                              time.sleep(2)
+                              if attempt == 2: 
+                                  print(f"  ❌ Clone verisi alınamadı: {str(e)}")
+                              else:
+                                  time.sleep(2)
                       
-                      with open(clones_file, 'w') as f:
-                          json.dump(clones_data, f, indent=2)
-
-                      # Repo index'i güncelle - preserve existing fields
+                      # Repo index'i güncelle - mevcut alanları koru
                       existing_data = existing_dict.get(repo.name, {})
                       new_entry = {
                           "name": repo.name,
@@ -158,30 +230,47 @@ jobs:
                           "updated_at": datetime.now(timezone.utc).isoformat()
                       }
                       
-                      # Preserve any existing custom fields
+                      # Mevcut özel alanları koru
                       for key, value in existing_data.items():
                           if key not in new_entry:
                               new_entry[key] = value
                       
                       updated_repos.append(new_entry)
+                      processed_count += 1
+                      
+                      if repo_new:
+                          new_count += 1
+                          print(f"  ✅ Yeni veriler eklendi")
+                      elif repo_updated:
+                          updated_count += 1
+                          print(f"  🔄 Mevcut veriler güncellendi")
+                      else:
+                          print(f"  ⏺️ Değişiklik yok")
 
                       time.sleep(1.2)  # Rate limit koruma
                       
                   except Exception as e:
-                      print(f"⚠️ {repo.name} işlenemedi: {str(e)}")
-                      # Keep existing data if available
+                      print(f"  ❌ {repo.name} işlenemedi: {str(e)}")
+                      error_count += 1
+                      # Hata durumunda eski veriyi koru
                       if repo.name in existing_dict:
                           updated_repos.append(existing_dict[repo.name])
                       continue
 
-              # Sort repos by name
+              # Repoları isme göre sırala
               updated_repos.sort(key=lambda x: x['name'])
               
               # Nihai repo index'i yaz
               with open(repo_index_path, 'w') as f:
                   json.dump(updated_repos, f, indent=2)
               
-              print(f"✅ {len(updated_repos)} repo işlendi")
+              print(f"\n{'='*50}")
+              print(f"✅ İşlem tamamlandı!")
+              print(f"📊 İşlenen repo: {processed_count}")
+              print(f"✨ Yeni veri eklenen: {new_count}")
+              print(f"🔄 Güncellenen: {updated_count}")
+              print(f"⚠️ Hata: {error_count}")
+              print(f"{'='*50}")
 
           except Exception as e:
               print(f"🔥 Kritik hata: {str(e)}")
@@ -202,7 +291,7 @@ jobs:
           
           git commit -m "📈 Historical data accumulation: $(date -u '+%Y-%m-%dT%H:%MZ')"
           
-          # Retry loop with conflict resolution
+          # Retry loop with exponential backoff for conflict resolution
           MAX_RETRIES=5
           for i in $(seq 1 $MAX_RETRIES); do
             echo "🔄 Push attempt $i of $MAX_RETRIES..."
@@ -215,6 +304,6 @@ jobs:
             fi
             
             WAIT_TIME=$((2 ** i))
-            echo "⚠️ Attempt $i failed, waiting ${WAIT_TIME}s..."
+            echo "⚠️ Attempt $i failed, waiting ${WAIT_TIME}s before retry..."
             sleep $WAIT_TIME
           done
