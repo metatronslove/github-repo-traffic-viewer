@@ -46,9 +46,29 @@ jobs:
           import json
           import time
           from datetime import datetime, timezone
+          from types import SimpleNamespace
 
           g = Github(os.environ['GH_TOKEN'])
           data_dir = os.environ['DATA_DIR']
+          
+          def dict_to_object(dict_data, key_name):
+              """Sözlük yapısını nesne yapısına dönüştür"""
+              if isinstance(dict_data, dict) and key_name in dict_data:
+                  items = dict_data[key_name]
+                  # Her bir öğeyi nesneye dönüştür
+                  class TrafficItem:
+                      def __init__(self, item):
+                          self.timestamp = item['timestamp'] if isinstance(item['timestamp'], datetime) else datetime.fromisoformat(item['timestamp'].replace('Z', '+00:00'))
+                          self.count = item['count']
+                          self.uniques = item['uniques']
+                  
+                  item_objects = [TrafficItem(item) for item in items]
+                  
+                  # Ana nesneyi oluştur
+                  obj = SimpleNamespace()
+                  setattr(obj, key_name, item_objects)
+                  return obj
+              return dict_data
           
           def merge_data(existing, new, key):
               # Mevcut timestamp'leri normalize et ve set oluştur
@@ -60,7 +80,7 @@ jobs:
                       ts = ts + 'Z'
                   existing_timestamps.add(ts)
               
-              # Mevcut verileri timestamp'e göre indexle (orijinal timestamp'leri koru)
+              # Mevcut verileri timestamp'e göre indexle
               existing_by_timestamp = {}
               for item in existing[key]:
                   ts_key = item['timestamp']
@@ -68,10 +88,19 @@ jobs:
                       ts_key = ts_key + 'Z'
                   existing_by_timestamp[ts_key] = item
               
+              # Yeni verileri al - new bir nesne veya sözlük olabilir
+              if isinstance(new, dict) and key in new:
+                  new_items = new[key]
+              else:
+                  new_items = getattr(new, key, [])
+              
+              print(f"    📊 {len(new_items)} yeni kayıt geldi")
+              
               # Yeni verileri ekle/güncelle
               merged = existing[key].copy()
+              changes_made = False
               
-              for item in new[key]:
+              for item in new_items:
                   # DOĞRU timestamp formatı
                   new_ts = item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
                   
@@ -90,9 +119,10 @@ jobs:
                                   "count": item.count,
                                   "uniques": item.uniques
                               })
-                              print(f"  ↻ Güncellendi: {new_ts} (count: {item.count}, uniques: {item.uniques})")
+                              changes_made = True
+                              print(f"      ↻ Güncellendi: {new_ts} (count: {item.count}, uniques: {item.uniques})")
                       else:
-                          print(f"  ⚠️ Timestamp set'te var ama veri bulunamadı: {new_ts}")
+                          print(f"      ⚠️ Timestamp set'te var ama veri bulunamadı: {new_ts}")
                   else:
                       # Yeni timestamp - direkt ekle
                       merged.append({
@@ -100,16 +130,22 @@ jobs:
                           "count": item.count,
                           "uniques": item.uniques
                       })
-                      print(f"  ✚ Eklendi: {new_ts} (count: {item.count}, uniques: {item.uniques})")
+                      changes_made = True
+                      print(f"      ✚ Eklendi: {new_ts} (count: {item.count}, uniques: {item.uniques})")
               
-              # Timestamp'e göre sırala
-              merged.sort(key=lambda x: x['timestamp'])
-              
-              # Toplamları güncelle
-              total_count = sum(item['count'] for item in merged)
-              total_uniques = sum(item['uniques'] for item in merged)
-              
-              return merged, total_count, total_uniques
+              if changes_made:
+                  # Timestamp'e göre sırala
+                  merged.sort(key=lambda x: x['timestamp'])
+                  
+                  # Toplamları güncelle
+                  total_count = sum(item['count'] for item in merged)
+                  total_uniques = sum(item['uniques'] for item in merged)
+                  
+                  print(f"    ✅ Toplam {len(merged)} kayıt")
+                  return merged, total_count, total_uniques, True
+              else:
+                  print(f"    ⏺️ Değişiklik yok")
+                  return existing[key], existing['count'], existing['uniques'], False
 
           try:
               repos = list(g.get_user().get_repos(type='all'))
@@ -139,8 +175,7 @@ jobs:
                   
                   try:
                       print(f"\n📦 İşleniyor: {repo.name}")
-                      repo_updated = False
-                      repo_new = False
+                      repo_changed = False
                       
                       # Views verilerini işle
                       views_file = f"{repo_dir}/views.json"
@@ -153,48 +188,22 @@ jobs:
                       
                       try:
                           new_views = repo.get_views_traffic()
-                          # API yanıtı sözlük mü nesne mi kontrol et
-                          if isinstance(new_views, dict) and 'views' in new_views:
-                              # Sözlük ise, içindeki views listesini al ve nesnelere dönüştür
-                              views_items = new_views['views']
-                              # Nesne listesi oluştur (her item zaten bir nesne)
-                              class ViewObj:
-                                  def __init__(self, item):
-                                      self.timestamp = item['timestamp'] if isinstance(item['timestamp'], datetime) else datetime.fromisoformat(item['timestamp'].replace('Z', '+00:00'))
-                                      self.count = item['count']
-                                      self.uniques = item['uniques']
-                              view_objects = [ViewObj(item) for item in views_items]
+                          # Sözlük ise nesneye dönüştür
+                          if isinstance(new_views, dict):
+                              new_views = dict_to_object(new_views, 'views')
+                          
+                          merged_views, total_count, total_uniques, views_changed = merge_data(views_data, new_views, 'views')
+                          
+                          if views_changed:
+                              views_data['views'] = merged_views
+                              views_data['count'] = total_count
+                              views_data['uniques'] = total_uniques
                               
-                              # Geçici bir nesne oluştur
-                              from types import SimpleNamespace
-                              temp_views = SimpleNamespace()
-                              temp_views.views = view_objects
-                              
-                              merged_views, total_count, total_uniques = merge_data(views_data, temp_views, 'views')
-                          else:
-                              # Normal nesne yapısı
-                              merged_views, total_count, total_uniques = merge_data(views_data, new_views, 'views')
-                          
-                          # Değişiklik var mı kontrol et
-                          if len(merged_views) != len(views_data['views']):
-                              repo_new = True
-                          else:
-                              # İçerik değişmiş olabilir, detaylı kontrol
-                              for i, item in enumerate(merged_views):
-                                  if i < len(views_data['views']):
-                                      old_item = views_data['views'][i]
-                                      if item['count'] != old_item['count'] or item['uniques'] != old_item['uniques']:
-                                          repo_updated = True
-                                          break
-                          
-                          views_data['views'] = merged_views
-                          views_data['count'] = total_count
-                          views_data['uniques'] = total_uniques
-                          
-                          with open(views_file, 'w') as f:
-                              json.dump(views_data, f, indent=2)
+                              with open(views_file, 'w') as f:
+                                  json.dump(views_data, f, indent=2)
+                              repo_changed = True
                       except Exception as e:
-                          print(f"  ⚠️ Views verisi alınamadı: {str(e)}")
+                          print(f"  ⚠️ Views hatası: {str(e)}")
                       
                       # Clones verilerini işle
                       clones_file = f"{repo_dir}/clones.json"
@@ -208,50 +217,24 @@ jobs:
                       for attempt in range(3):
                           try:
                               new_clones = repo.get_clones_traffic()
+                              # Sözlük ise nesneye dönüştür
+                              if isinstance(new_clones, dict):
+                                  new_clones = dict_to_object(new_clones, 'clones')
                               
-                              # API yanıtı sözlük mü nesne mi kontrol et
-                              if isinstance(new_clones, dict) and 'clones' in new_clones:
-                                  # Sözlük ise, içindeki clones listesini al ve nesnelere dönüştür
-                                  clones_items = new_clones['clones']
-                                  # Nesne listesi oluştur
-                                  class CloneObj:
-                                      def __init__(self, item):
-                                          self.timestamp = item['timestamp'] if isinstance(item['timestamp'], datetime) else datetime.fromisoformat(item['timestamp'].replace('Z', '+00:00'))
-                                          self.count = item['count']
-                                          self.uniques = item['uniques']
-                                  clone_objects = [CloneObj(item) for item in clones_items]
+                              merged_clones, total_count, total_uniques, clones_changed = merge_data(clones_data, new_clones, 'clones')
+                              
+                              if clones_changed:
+                                  clones_data['clones'] = merged_clones
+                                  clones_data['count'] = total_count
+                                  clones_data['uniques'] = total_uniques
                                   
-                                  # Geçici bir nesne oluştur
-                                  from types import SimpleNamespace
-                                  temp_clones = SimpleNamespace()
-                                  temp_clones.clones = clone_objects
-                                  
-                                  merged_clones, total_count, total_uniques = merge_data(clones_data, temp_clones, 'clones')
-                              else:
-                                  # Normal nesne yapısı
-                                  merged_clones, total_count, total_uniques = merge_data(clones_data, new_clones, 'clones')
-                              
-                              # Değişiklik var mı kontrol et
-                              if len(merged_clones) != len(clones_data['clones']):
-                                  repo_new = True
-                              else:
-                                  for i, item in enumerate(merged_clones):
-                                      if i < len(clones_data['clones']):
-                                          old_item = clones_data['clones'][i]
-                                          if item['count'] != old_item['count'] or item['uniques'] != old_item['uniques']:
-                                              repo_updated = True
-                                              break
-                              
-                              clones_data['clones'] = merged_clones
-                              clones_data['count'] = total_count
-                              clones_data['uniques'] = total_uniques
-                              
-                              with open(clones_file, 'w') as f:
-                                  json.dump(clones_data, f, indent=2)
+                                  with open(clones_file, 'w') as f:
+                                      json.dump(clones_data, f, indent=2)
+                                  repo_changed = True
                               break
                           except Exception as e:
                               if attempt == 2: 
-                                  print(f"  ❌ Clone verisi alınamadı: {str(e)}")
+                                  print(f"  ❌ Clone hatası: {str(e)}")
                               else:
                                   time.sleep(2)
                       
@@ -274,12 +257,13 @@ jobs:
                       updated_repos.append(new_entry)
                       processed_count += 1
                       
-                      if repo_new:
-                          new_count += 1
-                          print(f"  ✅ Yeni veriler eklendi")
-                      elif repo_updated:
-                          updated_count += 1
-                          print(f"  🔄 Mevcut veriler güncellendi")
+                      if repo_changed:
+                          if repo.name in existing_dict:
+                              updated_count += 1
+                              print(f"  ✅ Repo güncellendi")
+                          else:
+                              new_count += 1
+                              print(f"  ✅ Yeni repo eklendi")
                       else:
                           print(f"  ⏺️ Değişiklik yok")
 
@@ -302,7 +286,7 @@ jobs:
               print(f"\n{'='*50}")
               print(f"✅ İşlem tamamlandı!")
               print(f"📊 İşlenen repo: {processed_count}")
-              print(f"✨ Yeni veri eklenen: {new_count}")
+              print(f"✨ Yeni repo: {new_count}")
               print(f"🔄 Güncellenen: {updated_count}")
               print(f"⚠️ Hata: {error_count}")
               print(f"{'='*50}")
@@ -326,7 +310,7 @@ jobs:
           
           git commit -m "📈 Tarihsel veri birikimi: $(date -u '+%Y-%m-%dT%H:%MZ')"
           
-          # Retry loop with exponential backoff for conflict resolution
+          # Retry loop with exponential backoff
           MAX_RETRIES=5
           for i in $(seq 1 $MAX_RETRIES); do
             echo "🔄 Push attempt $i of $MAX_RETRIES..."
