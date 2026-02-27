@@ -619,8 +619,33 @@
       "timestamp": "2026-02-21T00:00:00Z",
       "count": 0,
       "uniques": 0
+    },
+    {
+      "timestamp": "2026-02-22T00:00:00Z",
+      "count": 0,
+      "uniques": 0
+    },
+    {
+      "timestamp": "2026-02-23T00:00:00Z",
+      "count": 0,
+      "uniques": 0
+    },
+    {
+      "timestamp": "2026-02-24T00:00:00Z",
+      "count": 0,
+      "uniques": 0
+    },
+    {
+      "timestamp": "2026-02-25T00:00:00Z",
+      "count": 27,
+      "uniques": 13
+    },
+    {
+      "timestamp": "2026-02-26T00:00:00Z",
+      "count": 3,
+      "uniques": 3
     }
   ],
-  "count": 449,
-  "uniques": 291
+  "count": 479,
+  "uniques": 307
 }
