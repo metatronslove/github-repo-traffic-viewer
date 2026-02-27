@@ -72,7 +72,7 @@ jobs:
               merged = existing[key].copy()
               
               for item in new[key]:
-                  # Yeni timestamp'i oluştur
+                  # Yeni timestamp'i oluştur - DÜZELTİLDİ
                   new_ts = item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
                   
                   # Bu timestamp daha önce var mı kontrol et
