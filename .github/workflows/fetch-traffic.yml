@@ -27,9 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          echo "pygithub==1.59.0" > requirements.txt
-          echo "pyyaml" >> requirements.txt
-          pip install -r requirements.txt
+          pip install pygithub==1.59.0 pyyaml
 
       - name: Initialize Data Directory
         run: |
@@ -51,7 +49,7 @@ jobs:
           data_dir = os.environ['DATA_DIR']
           
           def merge_data(existing, new, key):
-              # Mevcut timestamp'leri normalize et ve set oluştur
+              # Mevcut timestamp'leri normalize et ve set oluştur (DUPLICATE ÖNLEME)
               existing_timestamps = set()
               for item in existing[key]:
                   ts = item['timestamp']
@@ -72,10 +70,10 @@ jobs:
               merged = existing[key].copy()
               
               for item in new[key]:
-                  # Yeni timestamp'i oluştur - DÜZELTİLDİ
+                  # DOĞRU timestamp formatı
                   new_ts = item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
                   
-                  # Bu timestamp daha önce var mı kontrol et
+                  # Bu timestamp daha önce var mı kontrol et (DUPLICATE KONTROLÜ)
                   if new_ts in existing_timestamps:
                       # Varolan veriyi al
                       existing_item = existing_by_timestamp.get(new_ts)
@@ -92,10 +90,9 @@ jobs:
                               })
                               print(f"  ↻ Güncellendi: {new_ts} (count: {item.count}, uniques: {item.uniques})")
                       else:
-                          # Bu durum teorikte olmamalı ama güvenlik için
                           print(f"  ⚠️ Timestamp set'te var ama veri bulunamadı: {new_ts}")
                   else:
-                      # Yeni timestamp - direkt ekle
+                      # Yeni timestamp - direkt ekle (DUPLICATE YOK)
                       merged.append({
                           "timestamp": new_ts,
                           "count": item.count,
@@ -179,7 +176,7 @@ jobs:
                       except Exception as e:
                           print(f"  ⚠️ Views verisi alınamadı: {str(e)}")
                       
-                      # Clones verilerini işle (3 deneme)
+                      # Clones verilerini işle
                       clones_file = f"{repo_dir}/clones.json"
                       clones_data = {"clones": [], "count": 0, "uniques": 0}
                       
@@ -219,7 +216,7 @@ jobs:
                               else:
                                   time.sleep(2)
                       
-                      # Repo index'i güncelle - mevcut alanları koru
+                      # Repo index'i güncelle
                       existing_data = existing_dict.get(repo.name, {})
                       new_entry = {
                           "name": repo.name,
@@ -247,12 +244,11 @@ jobs:
                       else:
                           print(f"  ⏺️ Değişiklik yok")
 
-                      time.sleep(1.2)  # Rate limit koruma
+                      time.sleep(1.2)
                       
                   except Exception as e:
                       print(f"  ❌ {repo.name} işlenemedi: {str(e)}")
                       error_count += 1
-                      # Hata durumunda eski veriyi koru
                       if repo.name in existing_dict:
                           updated_repos.append(existing_dict[repo.name])
                       continue
@@ -291,7 +287,6 @@ jobs:
           
           git commit -m "📈 Historical data accumulation: $(date -u '+%Y-%m-%dT%H:%MZ')"
           
-          # Retry loop with exponential backoff for conflict resolution
           MAX_RETRIES=5
           for i in $(seq 1 $MAX_RETRIES); do
             echo "🔄 Push attempt $i of $MAX_RETRIES..."
