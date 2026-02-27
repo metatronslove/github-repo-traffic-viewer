@@ -276,6 +276,8 @@ jobs:
               print(f"{'='*60}")
               print(f"✅ İşlenen repo: {stats['processed']}")
               print(f"✨ Yeni repo: {stats['new_data']}")
+              print(f"    🔍 API ham yanıt: {dir(new_views)}")
+              print(f"    🔍 views attribute: {getattr(new_views, 'views', 'YOK')}")
               print(f"🔄 Güncellenen: {stats['updated']}")
               print(f"⏺️ Değişmeyen: {stats['no_change']}")
               print(f"⚠️ Hata: {stats['errors']}")
