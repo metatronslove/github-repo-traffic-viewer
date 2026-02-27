@@ -50,35 +50,25 @@ jobs:
           g = Github(os.environ['GH_TOKEN'])
           data_dir = os.environ['DATA_DIR']
           
-          def parse_traffic_data(api_response, data_type):
-              """API'den gelen dictionary yapısını işle"""
-              if not api_response:
-                  print(f"    ⚠️ {data_type}: API boş döndü!")
-                  return []
+          def merge_data(existing, new_traffic_obj, data_key):
+              """Merge existing and new traffic data
+              existing: mevcut JSON dosyasından okunan veri
+              new_traffic_obj: repo.get_views_traffic() veya repo.get_clones_traffic() sonucu
+              data_key: 'views' veya 'clones'
+              """
+              # Yeni verileri al
+              if not new_traffic_obj:
+                  print(f"    ⚠️ {data_key}: API boş döndü!")
+                  return existing, False
               
-              # API'den gelen veri bir dictionary
-              if isinstance(api_response, dict):
-                  if data_type in api_response:
-                      items = api_response[data_type]
-                      print(f"    📊 {data_type}: {len(items)} kayıt geldi")
-                      
-                      # Örnek kayıtları göster
-                      for i, item in enumerate(items[:3]):
-                          ts = item['timestamp']
-                          if isinstance(ts, datetime):
-                              ts = ts.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
-                          print(f"      Örnek {i+1}: {ts} - count: {item['count']}, uniques: {item['uniques']}")
-                      
-                      return items
-                  else:
-                      print(f"    ⚠️ {data_type}: API yanıtında '{data_type}' anahtarı yok!")
-                      print(f"    API anahtarları: {list(api_response.keys())}")
-                      return []
-              else:
-                  print(f"    ⚠️ {data_type}: Beklenmeyen veri tipi: {type(api_response)}")
-                  return []
-          
-          def merge_data(existing, new_items, data_key):
+              new_items = getattr(new_traffic_obj, data_key, [])
+              print(f"    📊 {data_key}: {len(new_items)} yeni kayıt geldi")
+              
+              # Örnek kayıtları göster
+              for i, item in enumerate(new_items[:3]):
+                  ts = item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+                  print(f"      Örnek {i+1}: {ts} - count: {item.count}, uniques: {item.uniques}")
+              
               # Mevcut veri yoksa yeni yapı oluştur
               if not existing or data_key not in existing:
                   existing = {data_key: [], "count": 0, "uniques": 0}
@@ -106,17 +96,9 @@ jobs:
               
               for item in new_items:
                   # Timestamp'i al ve normalize et
-                  if isinstance(item['timestamp'], datetime):
-                      new_ts = item['timestamp'].astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
-                  else:
-                      new_ts = item['timestamp']
-                      if new_ts.endswith('+00:00'):
-                          new_ts = new_ts.replace('+00:00', 'Z')
-                      elif not new_ts.endswith('Z'):
-                          new_ts = new_ts + 'Z'
-                  
-                  count = item['count']
-                  uniques = item['uniques']
+                  new_ts = item.timestamp.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+                  count = item.count
+                  uniques = item.uniques
                   
                   if new_ts in existing_timestamps:
                       existing_item = existing_by_timestamp.get(new_ts)
@@ -212,17 +194,11 @@ jobs:
                       
                       try:
                           new_views = repo.get_views_traffic()
-                          # API'den gelen veriyi dictionary olarak işle
-                          if isinstance(new_views, dict):
-                              views_items = parse_traffic_data(new_views, 'views')
-                              if views_items:
-                                  merged_views, views_changed = merge_data(views_data, views_items, 'views')
-                                  if views_changed:
-                                      with open(views_file, 'w') as f:
-                                          json.dump(merged_views, f, indent=2)
-                                      repo_changed = True
-                          else:
-                              print(f"    ⚠️ views: Beklenmeyen veri tipi")
+                          merged_views, views_changed = merge_data(views_data, new_views, 'views')
+                          if views_changed:
+                              with open(views_file, 'w') as f:
+                                  json.dump(merged_views, f, indent=2)
+                              repo_changed = True
                       except Exception as e:
                           print(f"  ❌ Views hatası: {str(e)}")
                       
@@ -239,15 +215,11 @@ jobs:
                       for attempt in range(3):
                           try:
                               new_clones = repo.get_clones_traffic()
-                              # API'den gelen veriyi dictionary olarak işle
-                              if isinstance(new_clones, dict):
-                                  clones_items = parse_traffic_data(new_clones, 'clones')
-                                  if clones_items:
-                                      merged_clones, clones_changed = merge_data(clones_data, clones_items, 'clones')
-                                      if clones_changed:
-                                          with open(clones_file, 'w') as f:
-                                              json.dump(merged_clones, f, indent=2)
-                                          repo_changed = True
+                              merged_clones, clones_changed = merge_data(clones_data, new_clones, 'clones')
+                              if clones_changed:
+                                  with open(clones_file, 'w') as f:
+                                      json.dump(merged_clones, f, indent=2)
+                                  repo_changed = True
                               break
                           except Exception as e:
                               if attempt == 2:
