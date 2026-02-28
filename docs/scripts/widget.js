@@ -868,7 +868,7 @@
             console.log('🔑 Token alınıyor...');
             ably = new Ably.Realtime({
                 authUrl: config.tokenServer,
-                authMethod: 'POST',
+                authMethod: 'GET',
                 authParams: {
                     clientId: currentUser.id,
                     capability: JSON.stringify({
