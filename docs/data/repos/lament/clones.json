@@ -67,8 +67,8 @@
     },
     {
       "timestamp": "2026-03-10T00:00:00Z",
-      "count": 0,
-      "uniques": 0
+      "count": 90,
+      "uniques": 49
     },
     {
       "timestamp": "2026-03-11T00:00:00Z",
@@ -76,6 +76,6 @@
       "uniques": 0
     }
   ],
-  "count": 0,
-  "uniques": 0
+  "count": 90,
+  "uniques": 49
 }
