@@ -1914,8 +1914,13 @@
       "timestamp": "2026-03-10T00:00:00Z",
       "count": 310,
       "uniques": 70
+    },
+    {
+      "timestamp": "2026-03-11T00:00:00Z",
+      "count": 292,
+      "uniques": 63
     }
   ],
-  "count": 60959,
-  "uniques": 20115
+  "count": 61251,
+  "uniques": 20178
 }
