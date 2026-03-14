@@ -5,7 +5,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://one.fanclub.rocks/2025/03/26/bununla-yerel-aginizda-bir-yapay-zeka-chat-konsolu-yayinlayabilirsiniz-okullu-eglencesi-gibi.html",
-    "updated_at": "2026-03-14T18:45:27.267450+00:00"
+    "updated_at": "2026-03-14T19:30:32.686717+00:00"
   },
   {
     "name": "Ilce-isimleri-Numerolojik-Kayitlari",
@@ -13,7 +13,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "",
-    "updated_at": "2026-03-14T18:45:36.642954+00:00"
+    "updated_at": "2026-03-14T19:30:42.112517+00:00"
   },
   {
     "name": "Letter-Count-Tool",
@@ -21,7 +21,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://metatronslove.github.io/Letter-Count-Tool/",
-    "updated_at": "2026-03-14T18:45:42.051405+00:00"
+    "updated_at": "2026-03-14T19:30:47.490016+00:00"
   },
   {
     "name": "Local-Deepseek-R1",
@@ -29,7 +29,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "",
-    "updated_at": "2026-03-14T18:45:44.749979+00:00"
+    "updated_at": "2026-03-14T19:30:50.256769+00:00"
   },
   {
     "name": "NumberFansBot",
@@ -37,7 +37,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "",
-    "updated_at": "2026-03-14T18:45:48.780179+00:00"
+    "updated_at": "2026-03-14T19:30:54.347448+00:00"
   },
   {
     "name": "Vanilla-JavaScript-Numerology-Calculator",
@@ -45,7 +45,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://metatronslove.github.io/Vanilla-JavaScript-Numerology-Calculator/tr",
-    "updated_at": "2026-03-14T18:46:04.913290+00:00"
+    "updated_at": "2026-03-14T19:31:10.522712+00:00"
   },
   {
     "name": "YouTube-sohbet-asistan-",
@@ -53,7 +53,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "",
-    "updated_at": "2026-03-14T18:46:07.577883+00:00"
+    "updated_at": "2026-03-14T19:31:13.332891+00:00"
   },
   {
     "name": "abjad",
@@ -61,7 +61,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://one.fanclub.rocks/2024/04/13/user-defined-islamic-occult-abjad-functions-for-google-sheets-libreoffice-calc-andropen-office-calc-ms-excel-python-and-web-pages.html",
-    "updated_at": "2026-03-14T18:45:17.711363+00:00"
+    "updated_at": "2026-03-14T19:30:21.903624+00:00"
   },
   {
     "name": "abjad-magic-square-checker",
@@ -69,7 +69,15 @@
     "private": false,
     "default_branch": "main",
     "homepage": "",
-    "updated_at": "2026-03-14T18:45:19.056571+00:00"
+    "updated_at": "2026-03-14T19:30:23.253508+00:00"
+  },
+  {
+    "name": "abjad-widget",
+    "full_name": "metatronslove/abjad-widget",
+    "private": false,
+    "default_branch": "main",
+    "homepage": "",
+    "updated_at": "2026-03-14T19:30:24.632238+00:00"
   },
   {
     "name": "auto-clicker",
@@ -77,7 +85,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "",
-    "updated_at": "2026-03-14T18:45:20.403502+00:00"
+    "updated_at": "2026-03-14T19:30:26.005322+00:00"
   },
   {
     "name": "bash-installer-genearator",
@@ -85,7 +93,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "",
-    "updated_at": "2026-03-14T18:45:21.738420+00:00"
+    "updated_at": "2026-03-14T19:30:27.348592+00:00"
   },
   {
     "name": "batch-and-bash-conversion-scripts-for-ffmpeg",
@@ -93,7 +101,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://metatronslove.github.io/batch-and-bash-conversion-scripts-for-ffmpeg/",
-    "updated_at": "2026-03-14T18:45:23.094401+00:00"
+    "updated_at": "2026-03-14T19:30:28.675689+00:00"
   },
   {
     "name": "chat-widget",
@@ -101,7 +109,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://one.fanclub.rocks/",
-    "updated_at": "2026-03-14T18:45:24.429280+00:00"
+    "updated_at": "2026-03-14T19:30:30.022131+00:00"
   },
   {
     "name": "chess",
@@ -109,7 +117,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://metatronslove.github.io/chess/",
-    "updated_at": "2026-03-14T18:45:25.915847+00:00"
+    "updated_at": "2026-03-14T19:30:31.353214+00:00"
   },
   {
     "name": "cuma13",
@@ -117,7 +125,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://one.fanclub.rocks/2024/08/03/linux-terminali-her-actigimda-13-cumaya-kac-gun-kaldigini-gostertmek.html",
-    "updated_at": "2026-03-14T18:45:28.624035+00:00"
+    "updated_at": "2026-03-14T19:30:34.026473+00:00"
   },
   {
     "name": "dogrudan-irade-platformu",
@@ -125,7 +133,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "",
-    "updated_at": "2026-03-14T18:45:29.958264+00:00"
+    "updated_at": "2026-03-14T19:30:35.370607+00:00"
   },
   {
     "name": "emoji-editor",
@@ -133,7 +141,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://metatronslove.github.io/emoji-editor/",
-    "updated_at": "2026-03-14T18:45:31.299709+00:00"
+    "updated_at": "2026-03-14T19:30:36.706470+00:00"
   },
   {
     "name": "flat-earth-celestial-tracker",
@@ -141,7 +149,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://metatronslove.github.io/flat-earth-celestial-tracker/",
-    "updated_at": "2026-03-14T18:45:32.633396+00:00"
+    "updated_at": "2026-03-14T19:30:38.089186+00:00"
   },
   {
     "name": "github-repo-traffic-viewer",
@@ -149,7 +157,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://metatronslove.github.io/github-repo-traffic-viewer/",
-    "updated_at": "2026-03-14T18:45:33.966964+00:00"
+    "updated_at": "2026-03-14T19:30:39.438397+00:00"
   },
   {
     "name": "hermes-ai-trainer",
@@ -157,7 +165,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "",
-    "updated_at": "2026-03-14T18:45:35.302271+00:00"
+    "updated_at": "2026-03-14T19:30:40.772751+00:00"
   },
   {
     "name": "isimler-ve-ebced-degerleri",
@@ -165,7 +173,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://metatronslove.github.io/abjad/",
-    "updated_at": "2026-03-14T18:45:37.991592+00:00"
+    "updated_at": "2026-03-14T19:30:43.446104+00:00"
   },
   {
     "name": "kilo-kontrol-kayitlari",
@@ -173,7 +181,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "",
-    "updated_at": "2026-03-14T18:45:39.347747+00:00"
+    "updated_at": "2026-03-14T19:30:44.800766+00:00"
   },
   {
     "name": "lament",
@@ -181,7 +189,7 @@
     "private": false,
     "default_branch": "master",
     "homepage": "https://metatronslove.github.io/lament/",
-    "updated_at": "2026-03-14T18:45:40.693516+00:00"
+    "updated_at": "2026-03-14T19:30:46.150029+00:00"
   },
   {
     "name": "liliths-luck",
@@ -189,7 +197,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://metatronslove.github.io/liliths-luck/",
-    "updated_at": "2026-03-14T18:45:43.408182+00:00"
+    "updated_at": "2026-03-14T19:30:48.874095+00:00"
   },
   {
     "name": "local-previewer-html",
@@ -197,7 +205,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "",
-    "updated_at": "2026-03-14T18:45:46.080834+00:00"
+    "updated_at": "2026-03-14T19:30:51.623437+00:00"
   },
   {
     "name": "magic-square-generator",
@@ -205,7 +213,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://metatronslove.github.io/magic-square-generator/",
-    "updated_at": "2026-03-14T18:45:47.431550+00:00"
+    "updated_at": "2026-03-14T19:30:52.998344+00:00"
   },
   {
     "name": "occultabjadcalculator",
@@ -213,7 +221,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://metatronslove.github.io/occultabjadcalculator/",
-    "updated_at": "2026-03-14T18:45:50.116246+00:00"
+    "updated_at": "2026-03-14T19:30:55.701466+00:00"
   },
   {
     "name": "offline-downloader-script-and-gui",
@@ -221,7 +229,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://metatronslove.github.io/offline-downloader-script-and-gui/",
-    "updated_at": "2026-03-14T18:45:51.456560+00:00"
+    "updated_at": "2026-03-14T19:30:57.085806+00:00"
   },
   {
     "name": "okult-ebced-hesaplayici-cordova-android-app",
@@ -229,7 +237,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://tinyurl.com/occultapps",
-    "updated_at": "2026-03-14T18:45:52.795956+00:00"
+    "updated_at": "2026-03-14T19:30:58.424332+00:00"
   },
   {
     "name": "open-statistics-platform",
@@ -237,7 +245,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "",
-    "updated_at": "2026-03-14T18:45:54.165283+00:00"
+    "updated_at": "2026-03-14T19:30:59.789904+00:00"
   },
   {
     "name": "profile-pic-scraper",
@@ -245,7 +253,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://large.page.gd/",
-    "updated_at": "2026-03-14T18:45:55.516250+00:00"
+    "updated_at": "2026-03-14T19:31:01.141464+00:00"
   },
   {
     "name": "proxy2",
@@ -253,7 +261,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "",
-    "updated_at": "2026-03-14T18:45:56.849862+00:00"
+    "updated_at": "2026-03-14T19:31:02.495435+00:00"
   },
   {
     "name": "reversi",
@@ -261,7 +269,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://metatronslove.github.io/reversi/",
-    "updated_at": "2026-03-14T18:45:58.172718+00:00"
+    "updated_at": "2026-03-14T19:31:03.827538+00:00"
   },
   {
     "name": "sayiya-zar-at",
@@ -269,7 +277,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://metatronslove.github.io/sayiya-zar-at/",
-    "updated_at": "2026-03-14T18:45:59.503609+00:00"
+    "updated_at": "2026-03-14T19:31:05.176868+00:00"
   },
   {
     "name": "sdnext",
@@ -277,7 +285,7 @@
     "private": false,
     "default_branch": "master",
     "homepage": "https://metatronslove.github.io/sdnext/",
-    "updated_at": "2026-03-14T18:46:00.850189+00:00"
+    "updated_at": "2026-03-14T19:31:06.524848+00:00"
   },
   {
     "name": "sihirli-kare-olusturucu-cordova-android-app",
@@ -285,7 +293,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://tinyurl.com/occultapps",
-    "updated_at": "2026-03-14T18:46:02.209748+00:00"
+    "updated_at": "2026-03-14T19:31:07.850348+00:00"
   },
   {
     "name": "square-checker",
@@ -293,7 +301,7 @@
     "private": false,
     "default_branch": "main",
     "homepage": "",
-    "updated_at": "2026-03-14T18:46:03.571098+00:00"
+    "updated_at": "2026-03-14T19:31:09.178587+00:00"
   },
   {
     "name": "witchy",
@@ -301,6 +309,6 @@
     "private": false,
     "default_branch": "main",
     "homepage": "https://metatronslove.github.io/witchy/",
-    "updated_at": "2026-03-14T18:46:06.241299+00:00"
+    "updated_at": "2026-03-14T19:31:11.944431+00:00"
   }
 ]
