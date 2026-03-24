@@ -1974,8 +1974,13 @@
       "timestamp": "2026-03-22T00:00:00Z",
       "count": 208,
       "uniques": 61
+    },
+    {
+      "timestamp": "2026-03-23T00:00:00Z",
+      "count": 208,
+      "uniques": 46
     }
   ],
-  "count": 63740,
-  "uniques": 20771
+  "count": 63948,
+  "uniques": 20817
 }
