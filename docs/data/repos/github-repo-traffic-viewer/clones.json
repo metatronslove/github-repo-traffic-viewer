@@ -1979,8 +1979,13 @@
       "timestamp": "2026-03-23T00:00:00Z",
       "count": 208,
       "uniques": 46
+    },
+    {
+      "timestamp": "2026-03-24T00:00:00Z",
+      "count": 136,
+      "uniques": 51
     }
   ],
-  "count": 63948,
-  "uniques": 20817
+  "count": 64084,
+  "uniques": 20868
 }
