@@ -874,8 +874,13 @@
       "timestamp": "2026-03-26T00:00:00Z",
       "count": 1,
       "uniques": 1
+    },
+    {
+      "timestamp": "2026-03-27T00:00:00Z",
+      "count": 9,
+      "uniques": 6
     }
   ],
-  "count": 86,
-  "uniques": 80
+  "count": 95,
+  "uniques": 86
 }
