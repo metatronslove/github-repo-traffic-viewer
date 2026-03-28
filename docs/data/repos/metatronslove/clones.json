@@ -117,8 +117,8 @@
     },
     {
       "timestamp": "2026-03-27T00:00:00Z",
-      "count": 0,
-      "uniques": 0
+      "count": 30,
+      "uniques": 24
     },
     {
       "timestamp": "2026-03-28T00:00:00Z",
@@ -126,6 +126,6 @@
       "uniques": 0
     }
   ],
-  "count": 12,
-  "uniques": 12
+  "count": 42,
+  "uniques": 36
 }
