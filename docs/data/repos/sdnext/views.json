@@ -199,8 +199,13 @@
       "timestamp": "2026-04-03T00:00:00Z",
       "count": 0,
       "uniques": 0
+    },
+    {
+      "timestamp": "2026-04-04T00:00:00Z",
+      "count": 5,
+      "uniques": 5
     }
   ],
-  "count": 55,
-  "uniques": 4
+  "count": 60,
+  "uniques": 9
 }
