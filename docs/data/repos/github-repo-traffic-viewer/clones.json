@@ -2054,8 +2054,13 @@
       "timestamp": "2026-04-07T00:00:00Z",
       "count": 158,
       "uniques": 42
+    },
+    {
+      "timestamp": "2026-04-08T00:00:00Z",
+      "count": 142,
+      "uniques": 49
     }
   ],
-  "count": 66341,
-  "uniques": 21700
+  "count": 66483,
+  "uniques": 21749
 }
