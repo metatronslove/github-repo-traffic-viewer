@@ -2154,8 +2154,18 @@
       "timestamp": "2026-04-27T00:00:00Z",
       "count": 169,
       "uniques": 59
+    },
+    {
+      "timestamp": "2026-04-28T00:00:00Z",
+      "count": 153,
+      "uniques": 55
+    },
+    {
+      "timestamp": "2026-04-29T00:00:00Z",
+      "count": 242,
+      "uniques": 67
     }
   ],
-  "count": 73382,
-  "uniques": 24126
+  "count": 73777,
+  "uniques": 24248
 }
