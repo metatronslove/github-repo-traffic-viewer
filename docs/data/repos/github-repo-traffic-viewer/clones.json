@@ -2179,8 +2179,13 @@
       "timestamp": "2026-05-02T00:00:00Z",
       "count": 328,
       "uniques": 100
+    },
+    {
+      "timestamp": "2026-05-03T00:00:00Z",
+      "count": 348,
+      "uniques": 101
     }
   ],
-  "count": 74601,
-  "uniques": 24498
+  "count": 74949,
+  "uniques": 24599
 }
