@@ -139,8 +139,13 @@
       "timestamp": "2026-07-13T00:00:00Z",
       "count": 1,
       "uniques": 1
+    },
+    {
+      "timestamp": "2026-07-14T00:00:00Z",
+      "count": 1,
+      "uniques": 1
     }
   ],
-  "count": 239,
-  "uniques": 106
+  "count": 240,
+  "uniques": 107
 }
