@@ -1789,8 +1789,13 @@
       "timestamp": "2026-08-25T00:00:00Z",
       "count": 3,
       "uniques": 2
+    },
+    {
+      "timestamp": "2026-08-26T00:00:00Z",
+      "count": 5,
+      "uniques": 5
     }
   ],
-  "count": 2341,
-  "uniques": 1594
+  "count": 2346,
+  "uniques": 1599
 }
