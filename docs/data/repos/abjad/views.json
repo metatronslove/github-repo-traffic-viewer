@@ -2014,8 +2014,18 @@
       "timestamp": "2026-08-27T00:00:00Z",
       "count": 5,
       "uniques": 2
+    },
+    {
+      "timestamp": "2026-08-28T00:00:00Z",
+      "count": 3,
+      "uniques": 1
+    },
+    {
+      "timestamp": "2026-08-29T00:00:00Z",
+      "count": 0,
+      "uniques": 0
     }
   ],
-  "count": 1423,
-  "uniques": 400
+  "count": 1426,
+  "uniques": 401
 }
