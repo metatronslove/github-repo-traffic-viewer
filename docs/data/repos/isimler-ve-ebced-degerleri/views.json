@@ -1919,8 +1919,13 @@
       "timestamp": "2026-09-20T00:00:00Z",
       "count": 1,
       "uniques": 1
+    },
+    {
+      "timestamp": "2026-09-21T00:00:00Z",
+      "count": 5,
+      "uniques": 3
     }
   ],
-  "count": 2505,
-  "uniques": 1664
+  "count": 2510,
+  "uniques": 1667
 }
