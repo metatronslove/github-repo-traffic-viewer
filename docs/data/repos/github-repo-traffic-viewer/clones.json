@@ -2899,8 +2899,33 @@
       "timestamp": "2026-09-23T00:00:00Z",
       "count": 50,
       "uniques": 19
+    },
+    {
+      "timestamp": "2026-09-24T00:00:00Z",
+      "count": 54,
+      "uniques": 23
+    },
+    {
+      "timestamp": "2026-09-25T00:00:00Z",
+      "count": 56,
+      "uniques": 27
+    },
+    {
+      "timestamp": "2026-09-26T00:00:00Z",
+      "count": 46,
+      "uniques": 18
+    },
+    {
+      "timestamp": "2026-09-27T00:00:00Z",
+      "count": 42,
+      "uniques": 19
+    },
+    {
+      "timestamp": "2026-09-28T00:00:00Z",
+      "count": 54,
+      "uniques": 27
     }
   ],
-  "count": 89959,
-  "uniques": 29979
+  "count": 90211,
+  "uniques": 30093
 }
