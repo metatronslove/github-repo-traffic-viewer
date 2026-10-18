@@ -2264,8 +2264,13 @@
       "timestamp": "2026-10-16T00:00:00Z",
       "count": 1,
       "uniques": 1
+    },
+    {
+      "timestamp": "2026-10-17T00:00:00Z",
+      "count": 3,
+      "uniques": 3
     }
   ],
-  "count": 1471,
-  "uniques": 433
+  "count": 1474,
+  "uniques": 436
 }
