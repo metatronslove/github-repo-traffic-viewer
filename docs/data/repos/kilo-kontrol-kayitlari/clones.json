@@ -1989,8 +1989,13 @@
       "timestamp": "2026-11-06T00:00:00Z",
       "count": 0,
       "uniques": 0
+    },
+    {
+      "timestamp": "2026-11-07T00:00:00Z",
+      "count": 4,
+      "uniques": 2
     }
   ],
-  "count": 163,
-  "uniques": 158
+  "count": 167,
+  "uniques": 160
 }
