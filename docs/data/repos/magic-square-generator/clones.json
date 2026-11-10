@@ -1974,8 +1974,13 @@
       "timestamp": "2026-11-08T00:00:00Z",
       "count": 1,
       "uniques": 1
+    },
+    {
+      "timestamp": "2026-11-09T00:00:00Z",
+      "count": 2,
+      "uniques": 1
     }
   ],
-  "count": 296,
-  "uniques": 255
+  "count": 298,
+  "uniques": 256
 }
