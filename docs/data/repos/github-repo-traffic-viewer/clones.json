@@ -3184,8 +3184,18 @@
       "timestamp": "2026-11-19T00:00:00Z",
       "count": 24,
       "uniques": 8
+    },
+    {
+      "timestamp": "2026-11-20T00:00:00Z",
+      "count": 43,
+      "uniques": 22
+    },
+    {
+      "timestamp": "2026-11-21T00:00:00Z",
+      "count": 40,
+      "uniques": 18
     }
   ],
-  "count": 92851,
-  "uniques": 31218
+  "count": 92934,
+  "uniques": 31258
 }
