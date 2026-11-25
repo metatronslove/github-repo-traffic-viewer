@@ -1994,8 +1994,13 @@
       "timestamp": "2026-11-23T00:00:00Z",
       "count": 0,
       "uniques": 0
+    },
+    {
+      "timestamp": "2026-11-24T00:00:00Z",
+      "count": 4,
+      "uniques": 4
     }
   ],
-  "count": 634,
-  "uniques": 452
+  "count": 638,
+  "uniques": 456
 }
